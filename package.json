@@ -19,6 +19,8 @@
   },
   "homepage": "https://github.com/Carl-Bohme/osu-r6-api#readme",
   "dependencies": {
+    "bcrypt": "^5.1.0",
+    "body-parser": "^1.20.2",
     "express": "^4.18.2",
     "mysql2": "^3.2.4",
     "sequelize": "^6.31.0"
