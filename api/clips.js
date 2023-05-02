@@ -40,7 +40,7 @@ router.get('/:clip', jsonParser, async(req, res, next) => {
       res.sendFile(clip.path)
     } else {
       res.status(401).send({
-        error: "Insufficient Permissions"
+        error: "Unauthorized"
       })
     }
   } catch {

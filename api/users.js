@@ -127,7 +127,7 @@ router.post('/upload', jsonParser, requireAuthentication, upload.single('video')
 
 
 /*
-* Get all of a users clips
+* Get all of a user's clips
 */
 router.get('/clips', jsonParser, requireAuthentication, async(req, res, nect) => {
   try {
@@ -135,16 +135,47 @@ router.get('/clips', jsonParser, requireAuthentication, async(req, res, nect) =>
     const results = await Clip.findAll({ where: { user: id } })
     var clips = []
       results.forEach(element => {
-        clips.push({
-          title: element.title,
-          public: element.public,
-          date: element.createdAt,
-          link: `/clips/${element.id}`
-        })
+        if(element.public){
+          clips.push({
+            title: element.title,
+            public: element.public,
+            date: element.createdAt,
+            link: `/clips/${element.id}`
+          })
+        } else {
+          clips.push({
+            title: element.title,
+            public: element.public,
+            date: element.createdAt,
+            link: `/users/clips/${element.id}`
+          })
+        }
       })
     res.status(200).send({
       clips: clips
     })
+  } catch {
+    res.status(500).send({
+      error: "Unable to retrieve videos"
+    })
+  }
+})
+
+
+/*
+* Get a user's private clip
+*/
+router.get('/clips/:clip', jsonParser, requireAuthentication, async(req, res, nect) => {
+  try {
+    const id = req.user
+    const result = await Clip.findOne({ where: { id: id } })
+    if(result.user = req.user){
+      res.sendFile(result.path)
+    } else {
+      res.status(401).send({
+        error: "Unauthorized"
+      })
+    }
   } catch {
     res.status(500).send({
       error: "Unable to retrieve videos"
