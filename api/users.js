@@ -1,13 +1,14 @@
 const router = require('express').Router()
-
 const bcrypt = require('bcrypt')
 
 const bodyParser = require('body-parser')
 var jsonParser = bodyParser.json() 
 
-const { User, UserSchema } = require('../models/user');
-const { validateAgainstSchema } = require('../lib/validation');
-const { requireAuthentication, requireAdmin, generateAuthToken, generateInviteToken, requireInvite } = require('../lib/auth');
+const { User, UserSchema } = require('../models/user')
+const { Clip } = require('../models/clip')
+const { validateAgainstSchema } = require('../lib/validation')
+const { requireAuthentication, requireAdmin, generateAuthToken, generateInviteToken, requireInvite } = require('../lib/auth')
+const { upload, multerErrorCatch} = require('../lib/multer')
 
 
 /*
@@ -50,7 +51,7 @@ router.post('/login', jsonParser, async(req, res, next) => {
   if(req.body.email && req.body.password){
     try {
       const email = req.body.email
-      const user = await User.findOne({ where: { email } })
+      const user = await User.findOne({ where: { email: email } })
       if (!user) {
         res.status(400).send({
           error: "Invalid email or password"
@@ -63,7 +64,7 @@ router.post('/login', jsonParser, async(req, res, next) => {
         })
       }
       res.status(200).send({
-        success: "Logged in as " + user.name,
+        success: "Logged in as " + user.firstName,
         userId: user.id,
         token: generateAuthToken(user.id)
       })
@@ -86,7 +87,7 @@ router.post('/login', jsonParser, async(req, res, next) => {
 router.post('/invite', jsonParser, requireAuthentication, requireAdmin, async(req, res, next) => {
   try{
     res.status(200).send({
-      success: generateInviteToken(req.user)
+      success: generateInviteToken()
     })
   } catch (err) {
     res.status(500).send({
@@ -95,5 +96,91 @@ router.post('/invite', jsonParser, requireAuthentication, requireAdmin, async(re
   }
 })
 
+/*
+* Upload user clip
+*/
+router.post('/upload', jsonParser, requireAuthentication, upload.single('video'), multerErrorCatch, async(req, res, next) => {
+  try{ 
+    if(!req.file) {
+      res.status(400).send({
+        error: "MP4 file required"
+      })
+    } else {
+      uploadObject = {
+        user: req.user,
+        path: req.file.path
+      }
+      const newUpload = await Clip.create(uploadObject)
+      res.status(201).send({
+        title: newUpload.title,
+        public: newUpload.public,
+        date: newUpload.createdAt,
+        link: `/clips/${newUpload.id}`
+      })
+    }
+  } catch {
+    res.status(500).send({
+      error: "Error uploading video"
+    })
+  }
+})
+
+
+/*
+* Get all of a user's clips
+*/
+router.get('/clips', jsonParser, requireAuthentication, async(req, res, nect) => {
+  try {
+    const id = req.user
+    const results = await Clip.findAll({ where: { user: id } })
+    var clips = []
+      results.forEach(element => {
+        if(element.public){
+          clips.push({
+            title: element.title,
+            public: element.public,
+            date: element.createdAt,
+            link: `/clips/${element.id}`
+          })
+        } else {
+          clips.push({
+            title: element.title,
+            public: element.public,
+            date: element.createdAt,
+            link: `/users/clips/${element.id}`
+          })
+        }
+      })
+    res.status(200).send({
+      clips: clips
+    })
+  } catch {
+    res.status(500).send({
+      error: "Unable to retrieve videos"
+    })
+  }
+})
+
+
+/*
+* Get a user's private clip
+*/
+router.get('/clips/:clip', jsonParser, requireAuthentication, async(req, res, nect) => {
+  try {
+    const id = req.user
+    const result = await Clip.findOne({ where: { id: id } })
+    if(result.user = req.user){
+      res.sendFile(result.path)
+    } else {
+      res.status(401).send({
+        error: "Unauthorized"
+      })
+    }
+  } catch {
+    res.status(500).send({
+      error: "Unable to retrieve videos"
+    })
+  }
+})
 
 module.exports = router;

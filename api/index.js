@@ -1,5 +1,6 @@
-const router = require('express').Router();
+const router = require('express').Router()
 
-router.use('/users', require('./users'));
+router.use('/users', require('./users'))
+router.use('/clips', require('./clips'))
 
-module.exports = router;
+module.exports = router

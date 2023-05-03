@@ -1,5 +1,5 @@
 const sequelize = require('../lib/sequelize')
-const {DataTypes } = require('sequelize');
+const {DataTypes } = require('sequelize')
 
 /*
 * Schema for a User
@@ -10,14 +10,23 @@ const UserSchema = {
     password:	           { required: true, type: 'string' },
 	  admin:		           { required: false, type: 'bool' },
     status:              { required: true, type: 'string' }
-};
-exports.UserSchema = UserSchema;
+}
+exports.UserSchema = UserSchema
 
 
 const User = sequelize.define('User', {
-    name: {
+    firstName: {
       type: DataTypes.STRING,
       allowNull: false
+    },
+    lastName: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    IGN: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
     },
     email: {
       type: DataTypes.STRING,
@@ -39,5 +48,5 @@ const User = sequelize.define('User', {
       type: DataTypes.ENUM('active', 'inactive'),
       defaultValue: 'active'
     }
-  });
-  exports.User = User;
+  })
+  exports.User = User
