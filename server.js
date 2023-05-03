@@ -7,7 +7,10 @@ const sequelize = require('./lib/sequelize')
 const app = express();
 const port = process.env.PORT || 8001;
 
-app.use(cors())
+app.use(cors({
+  origin: 'http://localhost',
+  credentials: true
+}));
 
 /*
  * All routes for the API are written in modules in the api/ directory.  The
