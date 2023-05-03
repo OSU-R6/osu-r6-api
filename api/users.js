@@ -56,18 +56,19 @@ router.post('/login', jsonParser, async(req, res, next) => {
         res.status(400).send({
           error: "Invalid email or password"
         })
+      } else {
+        const passwordMatches = await bcrypt.compare(req.body.password, user.password)
+        if (!passwordMatches) {
+          res.status(400).send({
+            error: "Invalid email or password"
+          })
+        } else {
+          res.status(200).send({
+            userId: user.id,
+            token: generateAuthToken(user.id)
+          })
+        }
       }
-      const passwordMatches = await bcrypt.compare(req.body.password, user.password)
-      if (!passwordMatches) {
-        res.status(400).send({
-          error: "Invalid email or password"
-        })
-      }
-      res.status(200).send({
-        success: "Logged in as " + user.firstName,
-        userId: user.id,
-        token: generateAuthToken(user.id)
-      })
     } catch (err) {
       res.status(500).send({
         error: "An error occurred while logging in"
