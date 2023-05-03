@@ -1,10 +1,13 @@
 const express = require('express');
+const cors = require('cors');
 
 const api = require('./api');
 const sequelize = require('./lib/sequelize')
 
 const app = express();
 const port = process.env.PORT || 8001;
+
+app.use(cors())
 
 /*
  * All routes for the API are written in modules in the api/ directory.  The
@@ -25,6 +28,8 @@ app.use('*', function (req, res, next) {
     error: "Requested resource " + req.originalUrl + " does not exist"
   });
 });
+
+
 
 sequelize.sync().then(function () {
   app.listen(port, () => {
