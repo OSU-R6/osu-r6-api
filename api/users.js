@@ -63,12 +63,8 @@ router.post('/login', jsonParser, async(req, res, next) => {
             error: "Invalid email or password"
           })
         } else {
-          // res.status(200).send({
-          //   userId: user.id,
-          //   token: generateAuthToken(user.id)
-          // })
           setAuthCookie(res, generateAuthToken(user.id))
-          res.status(200).send({userId: user.id})
+          res.status(200).send()
         }
       }
     } catch (err) {
