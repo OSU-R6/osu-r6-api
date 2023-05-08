@@ -135,6 +135,32 @@ router.post('/upload', jsonParser, requireAuthentication, upload.single('video')
 
 
 /*
+* Get all alumni
+*/
+router.get('/alumni', jsonParser, async(req, res, next) => {
+  try{
+    const alumni = await User.findAll({ 
+      where: {status : "inactive"},
+      attributes: ['firstName', 'lastName', 'ign']
+    })
+    if(alumni.length > 0){
+      res.status(260).send(
+        alumni
+      )
+    } else {
+      res.status(404).send({
+        error: "No Alumni Found"
+      })
+    }
+  } catch (err) {
+    res.status(500).send({
+      error: "Server Error"
+    })
+  }
+})
+
+
+/*
 * Get all of a user's clips
 */
 router.get('/clips', jsonParser, requireAuthentication, async(req, res, nect) => {
