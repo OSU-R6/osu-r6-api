@@ -159,6 +159,31 @@ router.get('/alumni', jsonParser, async(req, res, next) => {
   }
 })
 
+/*
+* Get all active members
+*/
+router.get('/active', jsonParser, async(req, res, next) => {
+  try{
+    const alumni = await User.findAll({ 
+      where: {status : "active"},
+      attributes: ['firstName', 'lastName', 'ign']
+    })
+    if(alumni.length > 0){
+      res.status(260).send(
+        alumni
+      )
+    } else {
+      res.status(404).send({
+        error: "No Active Members Found"
+      })
+    }
+  } catch (err) {
+    res.status(500).send({
+      error: "Server Error"
+    })
+  }
+})
+
 
 /*
 * Get all of a user's clips
