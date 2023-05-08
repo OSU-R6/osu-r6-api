@@ -7,7 +7,7 @@ var jsonParser = bodyParser.json()
 const { User, UserSchema } = require('../models/user')
 const { Clip } = require('../models/clip')
 const { validateAgainstSchema } = require('../lib/validation')
-const { requireAuthentication, requireAdmin, generateAuthToken, generateInviteToken, requireInvite } = require('../lib/auth')
+const { requireAuthentication, requireAdmin, generateAuthToken, generateInviteToken, requireInvite, setAuthCookie, clearAuthCookie } = require('../lib/auth')
 const { upload, multerErrorCatch} = require('../lib/multer')
 
 
@@ -53,20 +53,18 @@ router.post('/login', jsonParser, async(req, res, next) => {
       const email = req.body.email
       const user = await User.findOne({ where: { email: email } })
       if (!user) {
-        res.status(400).send({
+        res.status(401).send({
           error: "Invalid email or password"
         })
       } else {
         const passwordMatches = await bcrypt.compare(req.body.password, user.password)
         if (!passwordMatches) {
-          res.status(400).send({
+          res.status(401).send({
             error: "Invalid email or password"
           })
         } else {
-          res.status(200).send({
-            userId: user.id,
-            token: generateAuthToken(user.id)
-          })
+          setAuthCookie(res, generateAuthToken(user.id))
+          res.status(200).send()
         }
       }
     } catch (err) {
@@ -75,10 +73,19 @@ router.post('/login', jsonParser, async(req, res, next) => {
       })
     }
   } else {
-    res.status(400).send({
+    res.status(401).send({
       error: "Login requires email and password"
     })
   }
+})
+
+
+/*
+* Logout user
+*/
+router.post('/logout', async(req, res, next) => {
+  clearAuthCookie(res)
+  res.status(200).end()
 })
 
 
