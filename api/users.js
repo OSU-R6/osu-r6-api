@@ -1,6 +1,5 @@
 const router = require('express').Router()
 const bcrypt = require('bcrypt')
-const fs = require('fs')
 
 const bodyParser = require('body-parser')
 var jsonParser = bodyParser.json() 
