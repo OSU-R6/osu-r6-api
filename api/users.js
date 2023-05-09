@@ -104,6 +104,59 @@ router.post('/invite', jsonParser, requireAuthentication, requireAdmin, async(re
   }
 })
 
+
+/*
+* Get all alumni
+*/
+router.get('/alumni', jsonParser, async(req, res, next) => {
+  try{
+    const alumni = await User.findAll({ 
+      where: {status : "inactive"},
+      attributes: ['firstName', 'lastName', 'ign']
+    })
+    if(alumni.length > 0){
+      res.status(260).send(
+        alumni
+      )
+    } else {
+      res.status(404).send({
+        error: "No Alumni Found"
+      })
+    }
+  } catch (err) {
+    res.status(500).send({
+      error: "Server Error"
+    })
+  }
+})
+
+
+/*
+* Get all active members
+*/
+router.get('/active', jsonParser, async(req, res, next) => {
+  try{
+    const alumni = await User.findAll({ 
+      where: {status : "active"},
+      attributes: ['firstName', 'lastName', 'ign']
+    })
+    if(alumni.length > 0){
+      res.status(260).send(
+        alumni
+      )
+    } else {
+      res.status(404).send({
+        error: "No Active Members Found"
+      })
+    }
+  } catch (err) {
+    res.status(500).send({
+      error: "Server Error"
+    })
+  }
+})
+
+
 /*
 * Upload user clip
 */
@@ -133,23 +186,27 @@ router.post('/upload', jsonParser, requireAuthentication, upload.single('video')
   }
 })
 
-
 /*
-* Get all alumni
+* Toggle clip privacy
 */
-router.get('/alumni', jsonParser, async(req, res, next) => {
+router.post('/toggleClipPrivacy/:clip', requireAuthentication, async(req, res, next) => {
   try{
-    const alumni = await User.findAll({ 
-      where: {status : "inactive"},
-      attributes: ['firstName', 'lastName', 'ign']
-    })
-    if(alumni.length > 0){
-      res.status(260).send(
-        alumni
-      )
+    const clip = await Clip.findByPk(req.params.clip)
+    if(clip != null){
+      if(clip.user == req.user){
+        await Clip.update(
+          { public: !clip.public },
+          { where: { id : req.params.clip } }
+        )
+        res.status(201).send()
+      } else {
+        res.status(401).send({
+          error: "Unauthorized"
+        })
+      }
     } else {
       res.status(404).send({
-        error: "No Alumni Found"
+        error: "Clip Not Found"
       })
     }
   } catch (err) {
@@ -159,32 +216,7 @@ router.get('/alumni', jsonParser, async(req, res, next) => {
   }
 })
 
-/*
-* Get all active members
-*/
-router.get('/active', jsonParser, async(req, res, next) => {
-  try{
-    const alumni = await User.findAll({ 
-      where: {status : "active"},
-      attributes: ['firstName', 'lastName', 'ign']
-    })
-    if(alumni.length > 0){
-      res.status(260).send(
-        alumni
-      )
-    } else {
-      res.status(404).send({
-        error: "No Active Members Found"
-      })
-    }
-  } catch (err) {
-    res.status(500).send({
-      error: "Server Error"
-    })
-  }
-})
-
-
+ 
 /*
 * Get all of a user's clips
 */
