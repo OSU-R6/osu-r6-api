@@ -226,7 +226,7 @@ router.get('/GetPrivateClip/:clip', jsonParser, requireAuthentication, async(req
 /*
 * Toggle clip privacy
 */
-router.post('/TogglePrivacy/:clip', requireAuthentication, async(req, res, next) => {
+router.patch('/TogglePrivacy/:clip', requireAuthentication, async(req, res, next) => {
   try{
     const clip = await Clip.findByPk(req.params.clip)
     if(clip != null){
@@ -244,6 +244,42 @@ router.post('/TogglePrivacy/:clip', requireAuthentication, async(req, res, next)
     } else {
       res.status(404).send({
         error: "Clip Not Found"
+      })
+    }
+  } catch (err) {
+    res.status(500).send({
+      error: "Server Error"
+    })
+  }
+})
+
+/*
+* Modify clip title
+*/
+router.patch('/UpdateTitle/:clip', jsonParser, requireAuthentication, async(req, res, next) => {
+  try {
+    const clip = await Clip.findByPk(req.params.clip)
+    if(clip != null){
+      if(clip.user = req.user){
+        if(req.body.title){
+          await Clip.update(
+            { title: req.body.title.toString() },
+            { where: { id: req.params.clip } }
+          )
+          res.status(201).send()
+        } else {
+          res.status(400).send({
+            error: "Title required"
+          })
+        }
+      } else {
+        res.status(401).send({
+          error: "Unauthorized"
+        })
+      }
+    } else {
+      res.status(500).send({
+        error: "Clip not found"
       })
     }
   } catch (err) {
