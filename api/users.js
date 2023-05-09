@@ -1,5 +1,6 @@
 const router = require('express').Router()
 const bcrypt = require('bcrypt')
+const fs = require('fs')
 
 const bodyParser = require('body-parser')
 var jsonParser = bodyParser.json() 
@@ -186,6 +187,7 @@ router.post('/upload', jsonParser, requireAuthentication, upload.single('video')
   }
 })
 
+
 /*
 * Toggle clip privacy
 */
@@ -199,6 +201,44 @@ router.post('/toggleClipPrivacy/:clip', requireAuthentication, async(req, res, n
           { where: { id : req.params.clip } }
         )
         res.status(201).send()
+      } else {
+        res.status(401).send({
+          error: "Unauthorized"
+        })
+      }
+    } else {
+      res.status(404).send({
+        error: "Clip Not Found"
+      })
+    }
+  } catch (err) {
+    res.status(500).send({
+      error: "Server Error"
+    })
+  }
+})
+
+
+/*
+* Delete Clip
+*/
+router.delete('/clip/:clip', requireAuthentication, async(req, res, next) => {
+  try{
+    const clip = await Clip.findByPk(req.params.clip)
+    if(clip != null){
+      if(clip.user == req.user){
+        fs.unlink(clip.path, async(err) => {
+          if (err) {
+            res.status(404).send({
+              error: "Error removing clip"
+            })
+          }  else {
+            await Clip.destroy(
+               { where: { id : req.params.clip } }
+            )
+          }
+        });
+        res.status(204).send()
       } else {
         res.status(401).send({
           error: "Unauthorized"
