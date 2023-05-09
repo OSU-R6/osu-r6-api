@@ -1,4 +1,5 @@
 const router = require('express').Router()
+const fs = require('fs')
 
 const bodyParser = require('body-parser')
 var jsonParser = bodyParser.json()
@@ -22,6 +23,7 @@ router.get('/', async (req, res, next) => {
         var clips = []
         results.forEach(element => {
           clips.push({
+            id: element.id,
             title: element.title,
             date: element.createdAt,
             link: `/GetPublicClip/${element.id}`
@@ -78,6 +80,7 @@ router.get('/GetPublicClips/:user', jsonParser, async(req, res, nect) => {
       var clips = []
       results.forEach(element => {
         clips.push({
+          id: element.id,
           title: element.title,
           date: element.createdAt,
           link: `/clips/GetPublicClip/${element.id}`
@@ -140,13 +143,11 @@ router.delete('/:clip', requireAuthentication, async(req, res, next) => {
             res.status(404).send({
               error: "Error removing clip"
             })
-          }  else {
-            await Clip.destroy(
-               { where: { id : req.params.clip } }
-            )
+          } else {
+            await Clip.destroy({ where: { id : req.params.clip } })
+            res.status(204).send()
           }
         });
-        res.status(204).send()
       } else {
         res.status(401).send({
           error: "Unauthorized"
@@ -175,6 +176,7 @@ router.get('/GetPrivateClips', jsonParser, requireAuthentication, async(req, res
       results.forEach(element => {
         if(element.public){
           clips.push({
+            id: element.id,
             title: element.title,
             public: element.public,
             date: element.createdAt,
@@ -182,6 +184,7 @@ router.get('/GetPrivateClips', jsonParser, requireAuthentication, async(req, res
           })
         } else {
           clips.push({
+            id: element.id,
             title: element.title,
             public: element.public,
             date: element.createdAt,
