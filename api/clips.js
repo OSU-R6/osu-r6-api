@@ -24,7 +24,7 @@ router.get('/', async (req, res, next) => {
           clips.push({
             title: element.title,
             date: element.createdAt,
-            link: `/clips/${element.id}`
+            link: `/GetPublicClip/${element.id}`
           })
         });
         res.status(200).send({
@@ -40,9 +40,9 @@ router.get('/', async (req, res, next) => {
 /*
 * Get Public Clip
 */
-router.get('/:clip', jsonParser, async(req, res, next) => {
+router.get('/GetPublicClip/:clip', jsonParser, async(req, res, next) => {
   try {
-    const clip = await Clip.findOne({ where: { id: req.params.clip } })
+    const clip = await Clip.findByPk(req.params.clip)
     if(clip.public){
       res.sendFile(clip.path)
     } else {
@@ -80,7 +80,7 @@ router.get('/GetPublicClips/:user', jsonParser, async(req, res, nect) => {
         clips.push({
           title: element.title,
           date: element.createdAt,
-          link: `/clips/${element.id}`
+          link: `/clips/GetPublicClip/${element.id}`
         })
       })
       res.status(200).send({
@@ -117,7 +117,7 @@ router.post('/', jsonParser, requireAuthentication, upload.single('video'), mult
         title: newUpload.title,
         public: newUpload.public,
         date: newUpload.createdAt,
-        link: `/clips/${newUpload.id}`
+        link: `/clips/GetPrivateClip/${newUpload.id}`
       })
     }
   } catch {
@@ -178,14 +178,14 @@ router.get('/GetPrivateClips', jsonParser, requireAuthentication, async(req, res
             title: element.title,
             public: element.public,
             date: element.createdAt,
-            link: `/clips/${element.id}`
+            link: `/clips/GetPublicClip/${element.id}`
           })
         } else {
           clips.push({
             title: element.title,
             public: element.public,
             date: element.createdAt,
-            link: `/users/clips/${element.id}`
+            link: `/clips/GetPrivateClip/${element.id}`
           })
         }
       })
@@ -205,9 +205,9 @@ router.get('/GetPrivateClips', jsonParser, requireAuthentication, async(req, res
 router.get('/GetPrivateClip/:clip', jsonParser, requireAuthentication, async(req, res, nect) => {
   try {
     const id = req.user
-    const result = await Clip.findOne({ where: { id: id } })
-    if(result.user = req.user){
-      res.sendFile(result.path)
+    const clip = await Clip.findByPk(req.params.clip)
+    if(clip.user = req.user){
+      res.sendFile(clip.path)
     } else {
       res.status(401).send({
         error: "Unauthorized"
