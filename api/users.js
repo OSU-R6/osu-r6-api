@@ -79,6 +79,17 @@ router.post('/login', jsonParser, async(req, res, next) => {
 
 
 /*
+* Login Check
+*/
+router.get('/authenticate', requireAuthentication, async(req, res, next) => {
+  const user = await User.findByPk(req.user)
+  res.status(200).send({
+    ign: user.IGN
+  })
+})
+
+
+/*
 * Logout user
 */
 router.post('/logout', async(req, res, next) => {
