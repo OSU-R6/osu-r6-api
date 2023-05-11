@@ -84,6 +84,9 @@ router.post('/login', jsonParser, async(req, res, next) => {
 router.get('/authenticate', requireAuthentication, async(req, res, next) => {
   const user = await User.findByPk(req.user)
   res.status(200).send({
+    id: user.id,
+    firstName: user.firstName,
+    lastName: user.lastName,
     ign: user.IGN
   })
 })
