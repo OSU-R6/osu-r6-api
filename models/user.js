@@ -9,7 +9,8 @@ const UserSchema = {
     email:		           { required: true, type: 'string' },
     password:	           { required: true, type: 'string' },
 	  admin:		           { required: false, type: 'bool' },
-    status:              { required: true, type: 'string' }
+    status:              { required: true, type: 'string' },
+    bio:                 { required: false, type: 'string' }
 }
 exports.UserSchema = UserSchema
 
@@ -47,6 +48,10 @@ const User = sequelize.define('User', {
     status: {
       type: DataTypes.ENUM('active', 'inactive'),
       defaultValue: 'active'
-    }
+    },
+    bio: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
   })
   exports.User = User
