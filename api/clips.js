@@ -209,11 +209,17 @@ router.get('/GetPrivateClip/:clip', jsonParser, requireAuthentication, async(req
   try {
     const id = req.user
     const clip = await Clip.findByPk(req.params.clip)
-    if(clip.user = req.user){
-      res.sendFile(clip.path)
+    if(clip != null){
+      if(clip.user = req.user){
+        res.sendFile(clip.path)
+      } else {
+        res.status(401).send({
+          error: "Unauthorized"
+        })
+      }
     } else {
-      res.status(401).send({
-        error: "Unauthorized"
+      res.status(404).send({
+        error: "Clip Not Found"
       })
     }
   } catch {

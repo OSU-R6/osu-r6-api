@@ -1,3 +1,9 @@
+## OSU Rainbow Six API
+This is the API for the Oregon State Rainbow Six web application.
+
+## Tech Stack
+NodeJS
+
 ## Docker MySQL DB Creation
 docker run --name osu-r6 -e MYSQL_ROOT_PASSWORD=password -d mysql
 
