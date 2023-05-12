@@ -102,6 +102,31 @@ router.post('/logout', async(req, res, next) => {
 
 
 /*
+* Get user's public profile
+*/
+router.get('/GetPublicProfile/:user', async(req, res, next) => {
+  try {
+    const user = await User.findOne({where: {IGN: req.params.user} })
+    if(user != null){
+      res.status(200).send({
+        firstName: user.firstName,
+        lastName: user.lastName,
+        ign: user.IGN
+      })
+    } else {
+      res.status(500).send({
+        error: "User Not Found"
+      })
+    }
+  } catch {
+    res.status(500).send({
+      error: "Server Error"
+    })
+  }
+})
+
+
+/*
 * Create user invite token
 */
 router.post('/invite', jsonParser, requireAuthentication, requireAdmin, async(req, res, next) => {
