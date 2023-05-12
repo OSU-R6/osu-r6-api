@@ -112,6 +112,7 @@ router.post('/', jsonParser, requireAuthentication, upload.single('video'), mult
       })
     } else {
       uploadObject = {
+        title: req.body.title,
         user: req.user,
         path: req.file.path
       }
@@ -207,7 +208,6 @@ router.get('/GetPrivateClips', jsonParser, requireAuthentication, async(req, res
 */
 router.get('/GetPrivateClip/:clip', jsonParser, requireAuthentication, async(req, res, nect) => {
   try {
-    const id = req.user
     const clip = await Clip.findByPk(req.params.clip)
     if(clip != null){
       if(clip.user = req.user){
