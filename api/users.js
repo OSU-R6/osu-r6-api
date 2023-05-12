@@ -87,7 +87,8 @@ router.get('/authenticate', requireAuthentication, async(req, res, next) => {
     id: user.id,
     firstName: user.firstName,
     lastName: user.lastName,
-    ign: user.IGN
+    ign: user.IGN,
+    bio: user.bio
   })
 })
 
@@ -111,7 +112,8 @@ router.get('/GetPublicProfile/:user', async(req, res, next) => {
       res.status(200).send({
         firstName: user.firstName,
         lastName: user.lastName,
-        ign: user.IGN
+        ign: user.IGN,
+        bio: user.bio
       })
     } else {
       res.status(500).send({
