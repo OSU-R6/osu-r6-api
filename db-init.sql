@@ -1,5 +1,5 @@
 /* Insert Admin User */
-INSERT INTO `OSU-R6`.`Users` (`firstName`, `lastName`, `IGN`, `email`, `password`, `admin`, `status`, `bio`, `createdAt`, `updatedAt`) VALUES ('Admin', 'User', 'ign1', 'admin@gmail.com', '$2b$08$bs0dshJaWfZgPWTydXBeRecTDdgjW0L1i2QXJHw7gx3p1YwDo.Qli', '1', 'active', 'This is the bio of Admin' '2023-04-29 01:09:56', '2023-04-29 01:09:56');
+INSERT INTO `OSU-R6`.`Users` (`firstName`, `lastName`, `IGN`, `email`, `password`, `admin`, `status`, `bio`, `createdAt`, `updatedAt`) VALUES ('Admin', 'User', 'ign1', 'admin@gmail.com', '$2b$08$bs0dshJaWfZgPWTydXBeRecTDdgjW0L1i2QXJHw7gx3p1YwDo.Qli', '1', 'active', 'This is the bio of Admin', '2023-04-29 01:09:56', '2023-04-29 01:09:56');
 /* Insert Active User */
 INSERT INTO `OSU-R6`.`Users` (`firstName`, `lastName`, `IGN`, `email`, `password`, `admin`, `status`, `bio`,  `createdAt`, `updatedAt`) VALUES ('Active', 'User', 'ign2', 'active@gmail.com', '$2b$08$bs0dshJaWfZgPWTydXBeRecTDdgjW0L1i2QXJHw7gx3p1YwDo.Qli', '0', 'active', 'This is the bio of Active User', '2023-04-29 01:09:56', '2023-04-29 01:09:56');
 /* Insert Inactive User */
