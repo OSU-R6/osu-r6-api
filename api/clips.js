@@ -72,9 +72,9 @@ router.get('/GetPublicClips/:user', jsonParser, async(req, res, nect) => {
         include: {
           model: User,
           where: {
-            IGN: req.params.user
+            ign: req.params.user
           },
-          attributes: ['firstName', 'lastName', 'IGN']
+          attributes: ['firstName', 'lastName', 'ign']
         }
       });
       var clips = []

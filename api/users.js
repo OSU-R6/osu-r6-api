@@ -19,12 +19,12 @@ const { requireAuthentication, requireAdmin, generateAuthToken, generateInviteTo
 */
 router.get('/GetPublicProfile/:user', async(req, res, next) => {
   try {
-    const user = await User.findOne({where: {IGN: req.params.user} })
+    const user = await User.findOne({where: {ign: req.params.user} })
     if(user != null){
       res.status(200).send({
         firstName: user.firstName,
         lastName: user.lastName,
-        ign: user.IGN,
+        ign: user.ign,
         bio: user.bio
       })
     } else {
@@ -98,8 +98,9 @@ router.get('/active', jsonParser, async(req, res, next) => {
 */
 router.post('/', jsonParser, requireInvite, async (req, res, next) => {
   try {
-    schemaValidation = validateAgainstSchema(req.body, UserSchema)
+    const schemaValidation = validateAgainstSchema(req.body, UserSchema)
     if(schemaValidation === null){
+      req.body.admin = false
       req.body.password = await bcrypt.hash(req.body.password, 8)
       const newUser = await User.create(req.body)
       res.status(201).send({
@@ -112,15 +113,52 @@ router.post('/', jsonParser, requireInvite, async (req, res, next) => {
     }
   } catch (err) {
     // TODO: Find a way to detemine if error 400 or 409 for proper error handling
-    if(err.original.sqlMessage){
-      res.status(400).send({
-        error: err.original.sqlMessage
-      })
-    } else {
       res.status(400).send({
         error: err
       })
+   // }
+  }
+})
+
+
+/*
+* Check Email Availibility
+*/
+router.get('/email-availibility/:email', jsonParser, async (req, res, next) => {
+  try {
+    const user = await User.findOne({ where: {email: req.params.email}})
+    if(user === null){
+      res.status(200).send()
+    } else {
+      res.status(401).send({
+        error: "Email Not Available"
+      })
     }
+  } catch (err) {
+      res.status(400).send({
+        error: err
+      })
+  }
+})
+
+
+/*
+* Check IGN Availibility
+*/
+router.get('/ign-availibility/:ign', jsonParser, async (req, res, next) => {
+  try {
+    const user = await User.findOne({ where: {ign: req.params.ign}})
+    if(user === null){
+      res.status(200).send()
+    } else {
+      res.status(401).send({
+        error: "IGN Not Available"
+      })
+    }
+  } catch (err) {
+      res.status(400).send({
+        error: err
+      })
   }
 })
 
@@ -175,7 +213,7 @@ router.get('/authenticate', requireAuthentication, async(req, res, next) => {
     id: user.id,
     firstName: user.firstName,
     lastName: user.lastName,
-    ign: user.IGN,
+    ign: user.ign,
     bio: user.bio
   })
 })

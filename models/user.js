@@ -5,12 +5,13 @@ const {DataTypes } = require('sequelize')
 * Schema for a User
 */
 const UserSchema = {
-    name:                { required: true, type: 'string' },
+    firstName:           { required: true, type: 'string' },
+    lastName:            { required: true, type: 'string' },
     email:		           { required: true, type: 'string' },
     password:	           { required: true, type: 'string' },
-	  admin:		           { required: false, type: 'bool' },
-    status:              { required: true, type: 'string' },
-    bio:                 { required: false, type: 'string' }
+	  admin:		           { required: false, type: 'bool'  },
+    status:              { required: false, type: 'string'},
+    bio:                 { required: false, type: 'string'}
 }
 exports.UserSchema = UserSchema
 
@@ -24,7 +25,7 @@ const User = sequelize.define('User', {
       type: DataTypes.STRING,
       allowNull: false
     },
-    IGN: {
+    ign: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
@@ -47,10 +48,10 @@ const User = sequelize.define('User', {
     },
     status: {
       type: DataTypes.ENUM('active', 'inactive'),
-      defaultValue: 'active'
+      defaultValue: 'inactive'
     },
     bio: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: true,
     },
   })
