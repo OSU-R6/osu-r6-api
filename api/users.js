@@ -5,6 +5,7 @@ const bodyParser = require('body-parser')
 var jsonParser = bodyParser.json() 
 
 const { User, UserSchema } = require('../models/user')
+const { Invite } = require('../models/invite')
 const { validateAgainstSchema } = require('../lib/validation')
 const { requireAuthentication, requireAdmin, generateAuthToken, generateInviteToken, requireInvite, setAuthCookie, clearAuthCookie } = require('../lib/auth')
 
@@ -103,9 +104,24 @@ router.post('/', jsonParser, requireInvite, async (req, res, next) => {
       req.body.admin = false
       req.body.password = await bcrypt.hash(req.body.password, 8)
       const newUser = await User.create(req.body)
-      res.status(201).send({
-          newUser
-      })
+      if( newUser != null) {
+        if( await Invite.update(
+          { usedBy: newUser.id, status: "inactive"},
+          { where: {token: req.token} }
+        ) != null) {
+          res.status(500).send({
+            error: "Error Deactiviating Invite"
+          })
+        } else {
+          res.status(201).send({
+              newUser
+          })
+        }
+      } else {
+        res.status(500).send({
+          error: "Error Creating User"
+        })
+      }
     } else {
       res.status(400).send({
         error: schemaValidation
@@ -243,27 +259,6 @@ router.patch('/UpdateBio', requireAuthentication, jsonParser, async(req, res, ne
   } catch (err) {
     res.status(500).send({
       error: "Server Error"
-    })
-  }
-})
-
-
-/* #####################################################################
-/*                        Admin User Endpoints
-/* ##################################################################### */
-
-
-/*
-* Create user invite token
-*/
-router.post('/invite', jsonParser, requireAuthentication, requireAdmin, async(req, res, next) => {
-  try{
-    res.status(200).send({
-      success: generateInviteToken()
-    })
-  } catch (err) {
-    res.status(500).send({
-      error: "Error generating invite"
     })
   }
 })
