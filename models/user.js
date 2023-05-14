@@ -11,7 +11,8 @@ const UserSchema = {
     password:	           { required: true, type: 'string' },
 	  admin:		           { required: false, type: 'bool'  },
     status:              { required: false, type: 'string'},
-    bio:                 { required: false, type: 'string'}
+    bio:                 { required: false, type: 'string'},
+    pfp:                 { required: false, type: 'string'}
 }
 exports.UserSchema = UserSchema
 
@@ -54,5 +55,9 @@ const User = sequelize.define('User', {
       type: DataTypes.TEXT,
       allowNull: true,
     },
+    pfp: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    }
   })
   exports.User = User

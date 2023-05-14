@@ -1,5 +1,6 @@
 const router = require('express').Router()
 const bcrypt = require('bcrypt')
+const fs = require('fs')
 
 const bodyParser = require('body-parser')
 var jsonParser = bodyParser.json() 
@@ -8,6 +9,7 @@ const { User, UserSchema } = require('../models/user')
 const { Invite } = require('../models/invite')
 const { validateAgainstSchema } = require('../lib/validation')
 const { requireAuthentication, requireAdmin, generateAuthToken, generateInviteToken, requireInvite, setAuthCookie, clearAuthCookie } = require('../lib/auth')
+const { imageUpload, multerErrorCatch} = require('../lib/multer')
 
 
 /* #####################################################################
@@ -26,7 +28,8 @@ router.get('/GetPublicProfile/:user', async(req, res, next) => {
         firstName: user.firstName,
         lastName: user.lastName,
         ign: user.ign,
-        bio: user.bio
+        bio: user.bio,
+        pfp: '/users/GetProfileImage/' + user.ign
       })
     } else {
       res.status(500).send({
@@ -36,6 +39,28 @@ router.get('/GetPublicProfile/:user', async(req, res, next) => {
   } catch {
     res.status(500).send({
       error: "Server Error"
+    })
+  }
+})
+
+
+/*
+*
+*/
+router.get('/GetProfileImage/:user', async(req, res, next) => {
+  try {
+    const user = await User.findOne({where: {ign: req.params.user}})
+    console.log(user)
+    if(user.pfp != null) {
+      res.sendFile(user.pfp)
+    } else {
+      res.status(401).send({
+        error: "No Profile Image Found"
+      })
+    }
+  } catch {
+    res.status(500).send({
+      error: "Error retrieving file"
     })
   }
 })
@@ -101,9 +126,14 @@ router.post('/', jsonParser, requireInvite, async (req, res, next) => {
   try {
     const schemaValidation = validateAgainstSchema(req.body, UserSchema)
     if(schemaValidation === null){
-      req.body.admin = false
-      req.body.password = await bcrypt.hash(req.body.password, 8)
-      const newUser = await User.create(req.body)
+      const userToCreate = {
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        ign: req.body.ign,
+        email: req.body.email
+      }
+      userToCreate.password = await bcrypt.hash(req.body.password, 8)
+      const newUser = await User.create(userToCreate)
       if( newUser != null) {
         if( await Invite.update(
           { usedBy: newUser.id, status: "inactive"},
@@ -259,6 +289,51 @@ router.patch('/UpdateBio', requireAuthentication, jsonParser, async(req, res, ne
   } catch (err) {
     res.status(500).send({
       error: "Server Error"
+    })
+  }
+})
+
+
+/*
+* Upload user profile image
+*/
+router.post('/pfp', jsonParser, requireAuthentication, imageUpload.single('image'), multerErrorCatch, async(req, res, next) => {
+  try{ 
+    if(!req.file) {
+      res.status(400).send({
+        error: "PNG or JPG File Required"
+      })
+    } else {
+      var user = await User.findByPk(req.user)
+      if(user.pfp != null){
+        fs.unlink(user.pfp, async(err) => {
+          if (err) {
+            res.status(404).send({
+              error: "Error removing existing profile image"
+            })
+          } else {
+            user = await User.update(
+              {pfp: req.file.path},
+              {where: {id: req.user}}
+            )
+            res.status(201).send({
+              //link: `/clips/GetPrivateClip/${newUpload.id}`
+            })
+          }
+        });
+      } else {
+        user = await User.update(
+          {pfp: req.file.path},
+          {where: {id: req.user}}
+        )
+        res.status(201).send({
+          //link: `/clips/GetPrivateClip/${newUpload.id}`
+        })
+      }
+    }
+  } catch {
+    res.status(500).send({
+      error: "Error Uploading Image"
     })
   }
 })

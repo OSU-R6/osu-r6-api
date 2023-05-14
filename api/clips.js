@@ -7,7 +7,7 @@ var jsonParser = bodyParser.json()
 const { Clip } = require('../models/clip')
 const { User } = require('../models/user')
 const { requireAuthentication } = require('../lib/auth')
-const { upload, multerErrorCatch} = require('../lib/multer')
+const { videoUpload, multerErrorCatch} = require('../lib/multer')
 
 
 /* #####################################################################
@@ -104,11 +104,11 @@ router.get('/GetPublicClips/:user', jsonParser, async(req, res, nect) => {
 /*
 * Upload user clip
 */
-router.post('/', jsonParser, requireAuthentication, upload.single('video'), multerErrorCatch, async(req, res, next) => {
+router.post('/', jsonParser, requireAuthentication, videoUpload.single('video'), multerErrorCatch, async(req, res, next) => {
   try{ 
     if(!req.file) {
       res.status(400).send({
-        error: "MP4 file required"
+        error: "MP4 File Required"
       })
     } else {
       uploadObject = {
@@ -117,16 +117,22 @@ router.post('/', jsonParser, requireAuthentication, upload.single('video'), mult
         path: req.file.path
       }
       const newUpload = await Clip.create(uploadObject)
-      res.status(201).send({
-        title: newUpload.title,
-        public: newUpload.public,
-        date: newUpload.createdAt,
-        link: `/clips/GetPrivateClip/${newUpload.id}`
-      })
+      if(newUpload != null){
+        res.status(201).send({
+          title: newUpload.title,
+          public: newUpload.public,
+          date: newUpload.createdAt,
+          link: `/clips/GetPrivateClip/${newUpload.id}`
+        })
+      } else {
+        res.status(500).send({
+          error: "Error Uploading Video"
+        })
+      }
     }
   } catch {
     res.status(500).send({
-      error: "Error uploading video"
+      error: "Error Uploading Video"
     })
   }
 })
