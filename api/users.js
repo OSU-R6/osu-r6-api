@@ -24,13 +24,18 @@ router.get('/GetPublicProfile/:user', async(req, res, next) => {
   try {
     const user = await User.findOne({where: {ign: req.params.user} })
     if(user != null){
-      res.status(200).send({
+      const response = {
         firstName: user.firstName,
         lastName: user.lastName,
         ign: user.ign,
         bio: user.bio,
-        pfp: '/users/GetProfileImage/' + user.ign
-      })
+      }
+      if(user.pfp != null) {
+        response.pfp = '/users/GetProfileImage/' + user.ign
+      } else {
+        response.pfp = null
+      }
+      res.status(200).send(response)
     } else {
       res.status(500).send({
         error: "User Not Found"
@@ -50,7 +55,6 @@ router.get('/GetPublicProfile/:user', async(req, res, next) => {
 router.get('/GetProfileImage/:user', async(req, res, next) => {
   try {
     const user = await User.findOne({where: {ign: req.params.user}})
-    console.log(user)
     if(user.pfp != null) {
       res.sendFile(user.pfp)
     } else {
