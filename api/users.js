@@ -29,7 +29,8 @@ router.get('/GetPublicProfile/:user', async(req, res, next) => {
         lastName: user.lastName,
         ign: user.ign,
         bio: user.bio,
-        pfp: '/users/GetProfileImage/' + user.ign
+        pfp: '/users/GetProfileImage/' + user.ign,
+        role: user.role
       })
     } else {
       res.status(500).send({
@@ -45,16 +46,15 @@ router.get('/GetPublicProfile/:user', async(req, res, next) => {
 
 
 /*
-*
+* Get a profile image for a player
 */
 router.get('/GetProfileImage/:user', async(req, res, next) => {
   try {
     const user = await User.findOne({where: {ign: req.params.user}})
-    console.log(user)
     if(user.pfp != null) {
       res.sendFile(user.pfp)
     } else {
-      res.status(401).send({
+      res.status(404).send({
         error: "No Profile Image Found"
       })
     }
@@ -130,7 +130,8 @@ router.post('/', jsonParser, requireInvite, async (req, res, next) => {
         firstName: req.body.firstName,
         lastName: req.body.lastName,
         ign: req.body.ign,
-        email: req.body.email
+        email: req.body.email,
+        role: req.body.role
       }
       userToCreate.password = await bcrypt.hash(req.body.password, 8)
       const newUser = await User.create(userToCreate)
@@ -138,14 +139,12 @@ router.post('/', jsonParser, requireInvite, async (req, res, next) => {
         if( await Invite.update(
           { usedBy: newUser.id, status: "inactive"},
           { where: {token: req.token} }
-        ) != null) {
+        ) == null) {
           res.status(500).send({
             error: "Error Deactiviating Invite"
           })
         } else {
-          res.status(201).send({
-              newUser
-          })
+          res.status(201).send()
         }
       } else {
         res.status(500).send({
@@ -260,7 +259,8 @@ router.get('/authenticate', requireAuthentication, async(req, res, next) => {
     firstName: user.firstName,
     lastName: user.lastName,
     ign: user.ign,
-    bio: user.bio
+    bio: user.bio,
+    role: user.role
   })
 })
 
