@@ -17,6 +17,10 @@ const Clip = sequelize.define('Clip', {
       type: DataTypes.BOOLEAN,
       defaultValue: false
     },
+    spotlight: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
     title: {
       type: DataTypes.STRING,
       allowNull: false,
