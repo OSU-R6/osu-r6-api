@@ -96,6 +96,44 @@ router.get('/GetPublicClips/:user', jsonParser, async(req, res, nect) => {
     }
   })
 
+/*
+* Get all of a users public spotlight clips
+*/
+router.get('/GetSpotlight/:user', jsonParser, async(req, res, nect) => {
+  try {
+    const results = await Clip.findAll({
+      attributes: ['id', 'path', 'title', 'createdAt'],
+      where : {
+        public: true,
+        spotlight: true
+      },
+      include: {
+        model: User,
+        where: {
+          ign: req.params.user
+        },
+        attributes: ['firstName', 'lastName', 'ign']
+      }
+    });
+    var clips = []
+    results.forEach(element => {
+      clips.push({
+        id: element.id,
+        title: element.title,
+        date: element.createdAt,
+        link: `/clips/GetPublicClip/${element.id}`
+      })
+    })
+    res.status(200).send({
+      clips: clips
+    })
+  } catch {
+    res.status(500).send({
+      error: "Unable to retrieve videos"
+    })
+  }
+})
+
 
 /* #####################################################################
 /*                        Private Clip Endpoints
@@ -186,6 +224,7 @@ router.get('/GetPrivateClips', jsonParser, requireAuthentication, async(req, res
             id: element.id,
             title: element.title,
             public: element.public,
+            spotlight: element.spotlight,
             date: element.createdAt,
             link: `/clips/GetPublicClip/${element.id}`
           })
@@ -194,6 +233,7 @@ router.get('/GetPrivateClips', jsonParser, requireAuthentication, async(req, res
             id: element.id,
             title: element.title,
             public: element.public,
+            spotlight: element.spotlight,
             date: element.createdAt,
             link: `/clips/GetPrivateClip/${element.id}`
           })
@@ -231,6 +271,36 @@ router.get('/GetPrivateClip/:clip', jsonParser, requireAuthentication, async(req
   } catch {
     res.status(500).send({
       error: "Unable to retrieve videos"
+    })
+  }
+})
+
+/*
+* Toggle clip spotlight
+*/
+router.patch('/ToggleSpotlight/:clip', requireAuthentication, async(req, res, next) => {
+  try{
+    const clip = await Clip.findByPk(req.params.clip)
+    if(clip != null){
+      if(clip.user == req.user){
+        await Clip.update(
+          { spotlight: !clip.spotlight },
+          { where: { id : req.params.clip } }
+        )
+        res.status(201).send()
+      } else {
+        res.status(401).send({
+          error: "Unauthorized"
+        })
+      }
+    } else {
+      res.status(404).send({
+        error: "Clip Not Found"
+      })
+    }
+  } catch (err) {
+    res.status(500).send({
+      error: "Server Error"
     })
   }
 })
