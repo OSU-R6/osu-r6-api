@@ -1,0 +1,50 @@
+USE OSU-R6;
+
+/* Users Table */
+CREATE TABLE Users (
+  id INTEGER PRIMARY KEY AUTO_INCREMENT,
+  firstName VARCHAR(255) NOT NULL,
+  lastName VARCHAR(255) NOT NULL,
+  ign VARCHAR(255) NOT NULL UNIQUE,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  admin BOOLEAN DEFAULT FALSE,
+  status ENUM('active', 'inactive') DEFAULT 'inactive',
+  bio TEXT,
+  pfp VARCHAR(255),
+  role VARCHAR(255) NOT NULL,
+  createdAt DATETIME NOT NULL,
+  updatedAt DATETIME NOT NULL
+);
+
+/* Clips Table */
+CREATE TABLE Clips (
+  id INTEGER PRIMARY KEY AUTO_INCREMENT,
+  user INTEGER NOT NULL,
+  path VARCHAR(255) NOT NULL UNIQUE,
+  public BOOLEAN DEFAULT FALSE,
+  spotlight BOOLEAN DEFAULT FALSE,
+  title VARCHAR(255) NOT NULL DEFAULT 'Untitled',
+  createdAt DATETIME NOT NULL,
+  updatedAt DATETIME NOT NULL
+);
+
+ALTER TABLE Clips
+ADD CONSTRAINT FK_Clips_User FOREIGN KEY (user) REFERENCES Users(id);
+
+/* Invites Table */
+CREATE TABLE Invites (
+  id INTEGER PRIMARY KEY AUTO_INCREMENT,
+  creator INTEGER NOT NULL,
+  status ENUM('active', 'inactive') DEFAULT 'active',
+  token VARCHAR(255) NOT NULL,
+  usedBy INTEGER,
+  createdAt DATETIME NOT NULL,
+  updatedAt DATETIME NOT NULL
+);
+
+ALTER TABLE Invites
+ADD CONSTRAINT FK_Invites_Creator FOREIGN KEY (creator) REFERENCES Users(id);
+
+ALTER TABLE Invites
+ADD CONSTRAINT FK_Invites_UsedBy FOREIGN KEY (usedBy) REFERENCES Users(id);
