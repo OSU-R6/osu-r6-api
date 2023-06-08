@@ -1,5 +1,5 @@
 # OSU Rainbow Six API
-This is the API for the Oregon State Rainbow Six web application.
+This is the API to serve all data to the Oregon State Rainbow Six web application.
 
 ## Tech Stack
 <a href="https://nodejs.org/en/docs/">
@@ -28,6 +28,3 @@ This is the API for the Oregon State Rainbow Six web application.
 
 ### Production Environment
 #### Run: npm start
-
-## User Account Generation
-User accounts will only be able to be createed if that are provided a token from an administrator. This will prevent anyone from making an account. These tokens will be able to be creazted by admins on the site and stored in an 'invites' table in the database. Invites will be single use and mill be marked inactive after use. Using an invite token will also bind that account to that invite to create a log of which accounmt used which invite.
