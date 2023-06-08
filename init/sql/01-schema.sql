@@ -1,0 +1,2 @@
+/* OSU-R6 Schema */
+CREATE SCHEMA `OSU-R6`;
