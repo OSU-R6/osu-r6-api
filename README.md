@@ -23,6 +23,9 @@ This is the API to serve all data to the Oregon State Rainbow Six web applicatio
 
 ## Starting API
 
+### Development Environment
 #### npm install
-
-#### npm run dev (Development Environment) OR npm start (Production Environment)
+#### npm run dev
+### Production Environment
+#### npm install
+#### npm start
