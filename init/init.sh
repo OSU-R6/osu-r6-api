@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Create MySQL Docker Container
-docker run --name osu-r6-db -p 3306:3306 -e MYSQL_ROOT_PASSWORD=password -d -v /Users/krist/Documents/WebDev/osu-r6-api/init/sql/:/docker-entrypoint-initdb.d --restart unless-stopped mysql
+current_dir=$(pwd)
+docker run --name osu-db -p 3305:3306 -e MYSQL_ROOT_PASSWORD=password -d -v "${current_dir}/sql:/docker-entrypoint-initdb.d" mysql
 
 # Populate Clip and Profile Image Data
 sourceDirectory1="$(dirname "$0")/player-clips"

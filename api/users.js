@@ -1,6 +1,7 @@
 const router = require('express').Router()
 const bcrypt = require('bcrypt')
 const fs = require('fs')
+const path = require('path')
 
 const bodyParser = require('body-parser')
 var jsonParser = bodyParser.json() 
@@ -52,7 +53,8 @@ router.get('/GetProfileImage/:user', async(req, res, next) => {
   try {
     const user = await User.findOne({where: {ign: req.params.user}})
     if(user.pfp != null) {
-      res.sendFile(user.pfp)
+      const filePath = path.join(__dirname, '/uploads/profile-images/', user.pfp);
+      res.sendFile(filePath)
     } else {
       res.status(404).send({
         error: "No Profile Image Found"
@@ -306,29 +308,26 @@ router.post('/pfp', jsonParser, requireAuthentication, imageUpload.single('image
     } else {
       var user = await User.findByPk(req.user)
       if(user.pfp != null){
-        fs.unlink(user.pfp, async(err) => {
+        const filePath = path.join(__dirname, '/uploads/profile-images/', user.pfp);
+        fs.unlink(filePath, async(err) => {
           if (err) {
             res.status(404).send({
               error: "Error removing existing profile image"
             })
           } else {
             user = await User.update(
-              {pfp: req.file.path},
+              {pfp: req.file.filename},
               {where: {id: req.user}}
             )
-            res.status(201).send({
-              //link: `/clips/GetPrivateClip/${newUpload.id}`
-            })
+            res.status(201).send()
           }
         });
       } else {
         user = await User.update(
-          {pfp: req.file.path},
+          {pfp: req.file.filename},
           {where: {id: req.user}}
         )
-        res.status(201).send({
-          //link: `/clips/GetPrivateClip/${newUpload.id}`
-        })
+        res.status(201).send()
       }
     }
   } catch {
