@@ -1,7 +1,8 @@
 @echo off
 
 REM Create MySQL Docker Container
-docker run --name osu-r6-db -p 3306:3306 -e MYSQL_ROOT_PASSWORD=password -d -v C:\Users\krist\Documents\WebDev\osu-r6-api\init\sql\:/docker-entrypoint-initdb.d --restart unless-stopped mysql
+set "current_dir=%CD%"
+docker run --name osu-r6-db -p 3306:3306 -e MYSQL_ROOT_PASSWORD=password -d -v "%current_dir%\sql:/docker-entrypoint-initdb.d" --restart unless-stopped mysql
 
 REM Populate Clip and Profile Image Data
 set "sourceDirectory1=%~dp0player-clips"

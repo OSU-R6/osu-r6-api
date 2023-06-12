@@ -1,5 +1,6 @@
 const router = require('express').Router()
 const fs = require('fs')
+const path = require('path')
 
 const bodyParser = require('body-parser')
 var jsonParser = bodyParser.json()
@@ -46,7 +47,8 @@ router.get('/GetPublicClip/:clip', jsonParser, async(req, res, next) => {
   try {
     const clip = await Clip.findByPk(req.params.clip)
     if(clip.public){
-      res.sendFile(clip.path)
+      const filePath = path.join(__dirname, '/uploads/player-clips/', clip.path);
+      res.sendFile(filePath)
     } else {
       res.status(401).send({
         error: "Unauthorized"
@@ -152,7 +154,7 @@ router.post('/', jsonParser, requireAuthentication, videoUpload.single('video'),
       uploadObject = {
         title: req.body.title,
         user: req.user,
-        path: req.file.path
+        path: req.file.filename
       }
       const newUpload = await Clip.create(uploadObject)
       if(newUpload != null){
