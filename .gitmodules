@@ -1,0 +1,3 @@
+[submodule "osu-r6-api-init"]
+	path = osu-r6-api-init
+	url = https://github.com/OSU-R6/osu-r6-api-init.git
