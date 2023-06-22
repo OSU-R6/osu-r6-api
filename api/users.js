@@ -262,7 +262,8 @@ router.get('/authenticate', requireAuthentication, async(req, res, next) => {
     lastName: user.lastName,
     ign: user.ign,
     bio: user.bio,
-    role: user.role
+    role: user.role,
+    admin: user.admin
   })
 })
 
