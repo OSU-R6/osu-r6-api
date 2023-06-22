@@ -74,7 +74,7 @@ router.get('/GetProfileImage/:user', async(req, res, next) => {
 router.get('/alumni', jsonParser, async(req, res, next) => {
   try{
     const alumni = await User.findAll({ 
-      where: {status : "inactive"},
+      where: {team : "alumni"},
       attributes: ['firstName', 'lastName', 'ign']
     })
     if(alumni.length > 0){
@@ -100,7 +100,7 @@ router.get('/alumni', jsonParser, async(req, res, next) => {
 router.get('/active', jsonParser, async(req, res, next) => {
   try{
     const alumni = await User.findAll({ 
-      where: {status : "active"},
+      where: {team : "black"},
       attributes: ['firstName', 'lastName', 'ign']
     })
     if(alumni.length > 0){
@@ -133,7 +133,8 @@ router.post('/', jsonParser, requireInvite, async (req, res, next) => {
         lastName: req.body.lastName,
         ign: req.body.ign,
         email: req.body.email,
-        role: req.body.role
+        role: req.body.role,
+        team: req.body.team
       }
       userToCreate.password = await bcrypt.hash(req.body.password, 8)
       const newUser = await User.create(userToCreate)

@@ -10,7 +10,7 @@ const UserSchema = {
     email:		           { required: true, type: 'string' },
     password:	           { required: true, type: 'string' },
 	  admin:		           { required: false, type: 'bool'  },
-    status:              { required: false, type: 'string'},
+    team:                { required: false, type: 'string'},
     bio:                 { required: false, type: 'string'},
     pfp:                 { required: false, type: 'string'},
     role:                { required: true, type: 'string'}
@@ -48,9 +48,9 @@ const User = sequelize.define('User', {
       type: DataTypes.BOOLEAN,
       defaultValue: false
     },
-    status: {
-      type: DataTypes.ENUM('active', 'inactive'),
-      defaultValue: 'inactive'
+    team: {
+      type: DataTypes.STRING,
+      allowNull: false
     },
     bio: {
       type: DataTypes.TEXT,
