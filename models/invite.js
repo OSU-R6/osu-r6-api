@@ -11,7 +11,11 @@ const Invite = sequelize.define('Invite', {
     status: {
         type: DataTypes.ENUM('active', 'inactive'),
         defaultValue: 'active'
-      },
+    },
+    team: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
     token: {
         type: DataTypes.STRING,
         allowNull: false,
