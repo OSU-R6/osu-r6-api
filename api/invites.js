@@ -16,7 +16,7 @@ router.post('/', jsonParser, requireAuthentication, requireAdmin, async(req, res
         const inviteToken = generateInviteToken(req.body.team)
         const invite = await Invite.create({ creator: req.user, token: inviteToken, team: req.body.team})
         if(invite != null ){
-            res.status(200).send({
+            res.status(201).send({
                 success: inviteToken
             })
         } else {
