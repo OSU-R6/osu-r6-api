@@ -1,10 +1,11 @@
 const sequelize = require('../lib/sequelize')
-const {DataTypes } = require('sequelize')
+const {DataTypes} = require('sequelize')
 
 const {User} = require('../models/user')
+const {Team} = require('../models/team')
 
 const Invite = sequelize.define('Invite', {
-    creator: {
+    creator_id: {
       type: DataTypes.INTEGER,
       allowNull: false
     },
@@ -12,21 +13,22 @@ const Invite = sequelize.define('Invite', {
         type: DataTypes.ENUM('active', 'inactive'),
         defaultValue: 'active'
     },
-    team: {
-        type: DataTypes.STRING,
+    team_id: {
+        type: DataTypes.INTEGER,
         allowNull: false,
     },
     token: {
         type: DataTypes.STRING,
         allowNull: false,
     },
-    usedBy: {
+    used_by_id: {
         type: DataTypes.INTEGER,
         allowNull: true
     }
   })
 
-  Invite.belongsTo(User, { foreignKey: 'creator' });
-  Invite.belongsTo(User, { foreignKey: 'usedBy' });
+  Invite.belongsTo(User, { foreignKey: 'creator_id' });
+  Invite.belongsTo(User, { foreignKey: 'used_by_id' });
+  Invite.belongsTo(Team, { foreignKey: 'team_id' });
 
   exports.Invite = Invite

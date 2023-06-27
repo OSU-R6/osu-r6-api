@@ -17,7 +17,6 @@ const { imageUpload, multerErrorCatch} = require('../lib/multer')
 /*                        Public User Endpoints
 /* ##################################################################### */
 
-
 /*
 * Get user's public profile
 */
@@ -31,6 +30,8 @@ router.get('/GetPublicProfile/:user', async(req, res, next) => {
         ign: user.ign,
         bio: user.bio,
         pfp: '/users/GetProfileImage/' + user.ign,
+        team: user.team_id,
+        is_sub: user.is_sub,
         role: user.role
       })
     } else {
@@ -44,7 +45,6 @@ router.get('/GetPublicProfile/:user', async(req, res, next) => {
     })
   }
 })
-
 
 /*
 * Get a profile image for a player
@@ -67,59 +67,6 @@ router.get('/GetProfileImage/:user', async(req, res, next) => {
   }
 })
 
-
-/*
-* Get all alumni
-*/
-router.get('/alumni', jsonParser, async(req, res, next) => {
-  try{
-    const alumni = await User.findAll({ 
-      where: {team : "alumni"},
-      attributes: ['firstName', 'lastName', 'ign']
-    })
-    if(alumni.length > 0){
-      res.status(260).send(
-        alumni
-      )
-    } else {
-      res.status(404).send({
-        error: "No Alumni Found"
-      })
-    }
-  } catch (err) {
-    res.status(500).send({
-      error: "Server Error"
-    })
-  }
-})
-
-
-/*
-* Get all active members
-*/
-router.get('/active', jsonParser, async(req, res, next) => {
-  try{
-    const alumni = await User.findAll({ 
-      where: {team : "black"},
-      attributes: ['firstName', 'lastName', 'ign']
-    })
-    if(alumni.length > 0){
-      res.status(260).send(
-        alumni
-      )
-    } else {
-      res.status(404).send({
-        error: "No Active Members Found"
-      })
-    }
-  } catch (err) {
-    res.status(500).send({
-      error: "Server Error"
-    })
-  }
-})
-
-
 /*
 * Register new user
 * Registering user requires admin generated invite
@@ -134,7 +81,8 @@ router.post('/', jsonParser, requireInvite, async (req, res, next) => {
         ign: req.body.ign,
         email: req.body.email,
         role: req.body.role,
-        team: req.body.team
+        team_id: req.body.team_id,
+        is_sub: req.body.is_sub
       }
       userToCreate.password = await bcrypt.hash(req.body.password, 8)
       const newUser = await User.create(userToCreate)
@@ -167,7 +115,6 @@ router.post('/', jsonParser, requireInvite, async (req, res, next) => {
    // }
   }
 })
-
 
 /*
 * Check Email Availibility
@@ -210,7 +157,6 @@ router.get('/ign-availibility/:ign', jsonParser, async (req, res, next) => {
   }
 })
 
-
 /*
 * Login user
 */
@@ -251,7 +197,6 @@ router.post('/login', jsonParser, async(req, res, next) => {
 /*                        Private User Endpoints
 /* ##################################################################### */
 
-
 /*
 * Login Check
 */
@@ -264,10 +209,11 @@ router.get('/authenticate', requireAuthentication, async(req, res, next) => {
     ign: user.ign,
     bio: user.bio,
     role: user.role,
+    is_sub: user.is_sub,
+    team_id: user.team_id,
     admin: user.admin
   })
 })
-
 
 /*
 * Logout user
@@ -276,7 +222,6 @@ router.post('/logout', async(req, res, next) => {
   clearAuthCookie(res)
   res.status(200).end()
 })
-
 
 /*
 * Update bio
@@ -296,7 +241,6 @@ router.patch('/UpdateBio', requireAuthentication, jsonParser, async(req, res, ne
     })
   }
 })
-
 
 /*
 * Upload user profile image

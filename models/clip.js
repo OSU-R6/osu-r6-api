@@ -1,10 +1,10 @@
 const sequelize = require('../lib/sequelize')
-const {DataTypes } = require('sequelize')
+const {DataTypes} = require('sequelize')
 
-const { User} = require('../models/user')
+const {User} = require('../models/user')
 
 const Clip = sequelize.define('Clip', {
-    user: {
+    user_id: {
       type: DataTypes.INTEGER,
       allowNull: false
     },
@@ -28,6 +28,6 @@ const Clip = sequelize.define('Clip', {
     }
   })
 
-  Clip.belongsTo(User, { foreignKey: 'user' });
+  Clip.belongsTo(User, { foreignKey: 'user_id' });
 
   exports.Clip = Clip
