@@ -153,7 +153,7 @@ router.post('/', jsonParser, requireAuthentication, videoUpload.single('video'),
     } else {
       uploadObject = {
         title: req.body.title,
-        user: req.user,
+        user_id: req.user,
         path: req.file.filename
       }
       const newUpload = await Clip.create(uploadObject)
@@ -184,7 +184,7 @@ router.delete('/:clip', requireAuthentication, async(req, res, next) => {
   try{
     const clip = await Clip.findByPk(req.params.clip)
     if(clip != null){
-      if(clip.user == req.user){
+      if(clip.user_id == req.user){
         fs.unlink(clip.path, async(err) => {
           if (err) {
             res.status(404).send({

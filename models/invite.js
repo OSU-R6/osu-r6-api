@@ -17,6 +17,10 @@ const Invite = sequelize.define('Invite', {
         type: DataTypes.INTEGER,
         allowNull: false,
     },
+    is_sub: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+    },
     token: {
         type: DataTypes.STRING,
         allowNull: false,
