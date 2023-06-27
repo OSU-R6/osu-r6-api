@@ -218,7 +218,7 @@ router.delete('/:clip', requireAuthentication, async(req, res, next) => {
 router.get('/GetPrivateClips', jsonParser, requireAuthentication, async(req, res, nect) => {
   try {
     const id = req.user
-    const results = await Clip.findAll({ where: { user: id } })
+    const results = await Clip.findAll({ where: { user_id: id } })
     var clips = []
       results.forEach(element => {
         if(element.public){
@@ -258,7 +258,7 @@ router.get('/GetPrivateClip/:clip', jsonParser, requireAuthentication, async(req
   try {
     const clip = await Clip.findByPk(req.params.clip)
     if(clip != null){
-      if(clip.user = req.user){
+      if(clip.user_id = req.user){
         res.sendFile(clip.path)
       } else {
         res.status(401).send({
@@ -284,7 +284,7 @@ router.patch('/ToggleSpotlight/:clip', requireAuthentication, async(req, res, ne
   try{
     const clip = await Clip.findByPk(req.params.clip)
     if(clip != null){
-      if(clip.user == req.user){
+      if(clip.user_id == req.user){
         await Clip.update(
           { spotlight: !clip.spotlight },
           { where: { id : req.params.clip } }
@@ -314,7 +314,7 @@ router.patch('/TogglePrivacy/:clip', requireAuthentication, async(req, res, next
   try{
     const clip = await Clip.findByPk(req.params.clip)
     if(clip != null){
-      if(clip.user == req.user){
+      if(clip.user_id == req.user){
         await Clip.update(
           { public: !clip.public },
           { where: { id : req.params.clip } }
@@ -344,7 +344,7 @@ router.patch('/UpdateTitle/:clip', jsonParser, requireAuthentication, async(req,
   try {
     const clip = await Clip.findByPk(req.params.clip)
     if(clip != null){
-      if(clip.user = req.user){
+      if(clip.user_id = req.user){
         if(req.body.title){
           await Clip.update(
             { title: req.body.title.toString() },
