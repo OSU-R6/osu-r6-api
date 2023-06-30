@@ -22,18 +22,15 @@ const { imageUpload, multerErrorCatch} = require('../lib/multer')
 */
 router.get('/GetPublicProfile/:user', async(req, res, next) => {
   try {
-    const user = await User.findOne({where: {ign: req.params.user} })
+    const user = await User.findOne({
+      where: {ign: req.params.user},
+      attributes: {
+        exclude: ['password', 'email', 'pfp', 'createdAt', 'updatedAt']
+      }
+    })
+    user.pfp = '/users/GetProfileImage/' + user.ign
     if(user != null){
-      res.status(200).send({
-        firstName: user.firstName,
-        lastName: user.lastName,
-        ign: user.ign,
-        bio: user.bio,
-        pfp: '/users/GetProfileImage/' + user.ign,
-        team: user.team_id,
-        is_sub: user.is_sub,
-        role: user.role
-      })
+      res.status(200).send(user)
     } else {
       res.status(500).send({
         error: "User Not Found"
@@ -201,18 +198,12 @@ router.post('/login', jsonParser, async(req, res, next) => {
 * Login Check
 */
 router.get('/authenticate', requireAuthentication, async(req, res, next) => {
-  const user = await User.findByPk(req.user)
-  res.status(200).send({
-    id: user.id,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    ign: user.ign,
-    bio: user.bio,
-    role: user.role,
-    is_sub: user.is_sub,
-    team_id: user.team_id,
-    admin: user.admin
+  const user = await User.findByPk(req.user, {
+    attributes: {
+      exclude: ['password', 'createdAt', 'updatedAt']
+    }
   })
+  res.status(200).send(user)
 })
 
 /*
@@ -279,6 +270,29 @@ router.post('/pfp', jsonParser, requireAuthentication, imageUpload.single('image
   } catch {
     res.status(500).send({
       error: "Error Uploading Image"
+    })
+  }
+})
+
+/*
+* Get List of Users
+*/
+router.get('/', requireAuthentication, requireAdmin, async(req, res, next) => {
+  try {
+    const users = await User.findAll({
+      attributes: ['id', 'firstName', 'lastName', 'ign', 'team_id', 'role', 'is_sub']
+    })
+    console.log("here")
+    if(users.length > 0) {
+      res.status(200).send(users)
+    } else {
+      res.status(404).send({
+        error: "No Users Found"
+      })
+    }
+  } catch (err) {
+    res.status(500).send({
+      error: "Server Error"
     })
   }
 })
