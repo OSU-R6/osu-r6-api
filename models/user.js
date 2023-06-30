@@ -10,11 +10,17 @@ const UserSchema = {
     email:		           { required: true, type: 'string' },
     password:	           { required: true, type: 'string' },
 	  admin:		           { required: false, type: 'boolean'},
+    ign:                 { required: true, type: 'string' },
+    uplay:               { required: true, type: 'string' },
     team_id:             { required: true, type: 'number' },
     bio:                 { required: false, type: 'string'},
     pfp:                 { required: false, type: 'string'},
     role:                { required: true, type: 'string' },
     is_sub:		           { required: true, type: 'boolean'},
+    twitch:              { required: false, type: 'string'},
+    twitter:             { required: false, type: 'string'},
+    instagram:           { required: false, type: 'string'},
+    youtube:             { required: false, type: 'string'}
 }
 exports.UserSchema = UserSchema
 
@@ -30,6 +36,11 @@ const User = sequelize.define('User', {
   ign: {
     type: DataTypes.STRING,
     allowNull: false,
+    unique: true,
+  },
+  uplay: {
+    type: DataTypes.STRING,
+    allowNull: true,
     unique: true,
   },
   email: {
@@ -67,7 +78,23 @@ const User = sequelize.define('User', {
   is_sub: {
     type: DataTypes.BOOLEAN,
     allowNull: false
-  }
+  },
+  twitch: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  twitter: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  instagram: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  youtube: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
 })
 
 exports.User = User
