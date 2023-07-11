@@ -31,8 +31,8 @@ const Invite = sequelize.define('Invite', {
     }
   })
 
-  Invite.belongsTo(User, { foreignKey: 'creator_id' });
-  Invite.belongsTo(User, { foreignKey: 'used_by_id' });
+  Invite.belongsTo(User, { foreignKey: 'creator_id', as: 'Creator' });
+  Invite.belongsTo(User, { foreignKey: 'used_by_id', as: 'InvitedUser' });
   Invite.belongsTo(Team, { foreignKey: 'team_id' });
 
   exports.Invite = Invite

@@ -6,6 +6,7 @@ var jsonParser = bodyParser.json()
 const {requireAuthentication, requireAdmin} = require('../lib/auth')
 
 const {Match} = require('../models/match')
+const {Team} = require('../models/team')
 
 
 /* #####################################################################
@@ -20,7 +21,14 @@ router.get('/upcoming', async(req, res, next) => {
         const currentDate = new Date();
         const matches = await Match.findAll({ 
             where: {date: {[Op.gt]: currentDate} },
-            attributes: ['id', 'description', 'team_id', 'opponent', 'date']
+            attributes: ['id', 'description', 'team_id', 'opponent', 'date', 'stream_link'],
+            order: [['date', 'ASC']],
+            include: [
+                {
+                  model: Team,
+                  attributes: ['name']
+                }
+            ]
         })
         if(matches.length > 0) {
             res.status(200).send(matches)
@@ -43,8 +51,18 @@ router.get('/upcoming/:team', async(req, res, next) => {
     try {
         const currentDate = new Date();
         const matches = await Match.findAll({ 
-            where: {team_id: req.params.team, date: {[Op.gt]: currentDate} },
-            attributes: ['id', 'description', 'team_id', 'opponent', 'date']
+            where: {
+                team_id: req.params.team, 
+                date: {[Op.gt]: currentDate} 
+            },
+            attributes: ['id', 'description', 'team_id', 'opponent', 'date', 'stream_link'],
+            order: [['date', 'ASC']],
+            include: [
+                {
+                  model: Team,
+                  attributes: ['name']
+                }
+            ]
         })
         if(matches.length > 0) {
             res.status(200).send(matches)
