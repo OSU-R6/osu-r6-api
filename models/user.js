@@ -94,7 +94,7 @@ const User = sequelize.define('User', {
   youtube: {
     type: DataTypes.STRING,
     allowNull: true,
-  },
+  }
 })
 
 exports.User = User

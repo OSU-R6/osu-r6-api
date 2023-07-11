@@ -2,12 +2,14 @@ const router = require('express').Router()
 const bcrypt = require('bcrypt')
 const fs = require('fs')
 const path = require('path')
+const sequelize = require('../lib/sequelize')
 
 const bodyParser = require('body-parser')
 var jsonParser = bodyParser.json() 
 
 const { User, UserSchema } = require('../models/user')
 const { Invite } = require('../models/invite')
+const { Team } = require('../models/team')
 const { validateAgainstSchema } = require('../lib/validation')
 const { requireAuthentication, requireAdmin, generateAuthToken, generateInviteToken, requireInvite, setAuthCookie, clearAuthCookie } = require('../lib/auth')
 const { imageUpload, multerErrorCatch} = require('../lib/multer')
@@ -280,9 +282,22 @@ router.post('/pfp', jsonParser, requireAuthentication, imageUpload.single('image
 router.get('/', requireAuthentication, requireAdmin, async(req, res, next) => {
   try {
     const users = await User.findAll({
-      attributes: ['id', 'firstName', 'lastName', 'ign', 'team_id', 'role', 'is_sub']
+      attributes: {
+        exclude: ['password', 'email', 'pfp', 'createdAt', 'updatedAt'],
+        include: [
+          [
+            sequelize.literal('Team.name'),
+            'team'
+          ]
+        ]
+      },
+      include: [
+        {
+          model: Team,
+          attributes: []
+        }
+      ]
     })
-    console.log("here")
     if(users.length > 0) {
       res.status(200).send(users)
     } else {
@@ -291,6 +306,7 @@ router.get('/', requireAuthentication, requireAdmin, async(req, res, next) => {
       })
     }
   } catch (err) {
+    console.log(err)
     res.status(500).send({
       error: "Server Error"
     })

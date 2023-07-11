@@ -1,10 +1,13 @@
 const router = require('express').Router()
-const {Op} = require('sequelize');
+const {Op} = require('sequelize')
+const sequelize = require('../lib/sequelize')
 
 const bodyParser = require('body-parser')
 var jsonParser = bodyParser.json() 
 
 const { Invite } = require('../models/invite')
+const { User } = require('../models/user')
+const { Team } = require('../models/team')
 const { requireAuthentication, requireAdmin, generateInviteToken} = require('../lib/auth')
 
 /*
@@ -54,7 +57,18 @@ router.get('/active', requireAuthentication, requireAdmin, async(req, res, next)
       where: {
         status: "active",
         createdAt: {[Op.gt]: twentyFourHoursAgo}
-      }
+      },
+      include: [
+        {
+          model: Team,
+          attributes: ['name']
+        },
+        {
+          model: User,
+          as: 'Creator',
+          attributes: ['ign']
+        }
+      ]
     })
     if(invites.length > 0){
       res.status(200).send(invites)
@@ -64,6 +78,7 @@ router.get('/active', requireAuthentication, requireAdmin, async(req, res, next)
       })
     }
   } catch (err) {
+    console.log(err)
     res.status(500).send({
       error: "Server Error"
     })
@@ -79,7 +94,23 @@ router.get('/inactive', requireAuthentication, requireAdmin, async(req, res, nex
     const invites = await Invite.findAll({
       where: {
         status: "inactive"
-      }
+      },
+      include: [
+        {
+          model: Team,
+          attributes: ['name']
+        },
+        {
+          model: User,
+          as: 'Creator',
+          attributes: ['ign']
+        },
+        {
+          model: User,
+          as: 'InvitedUser',
+          attributes: ['ign']
+        }
+      ]
     })
     if(invites.length > 0){
       res.status(200).send(invites)
@@ -89,6 +120,7 @@ router.get('/inactive', requireAuthentication, requireAdmin, async(req, res, nex
       })
     }
   } catch (err) {
+    console.log(err)
     res.status(500).send({
       error: "Server Error"
     })
@@ -107,7 +139,18 @@ router.get('/expired', requireAuthentication, requireAdmin, async(req, res, next
       where: {
         status: "active",
         createdAt: {[Op.lt]: twentyFourHoursAgo}
-      }
+      },
+      include: [
+        {
+          model: Team,
+          attributes: ['name']
+        },
+        {
+          model: User,
+          as: 'Creator',
+          attributes: ['ign']
+        }
+      ]
     })
     if(invites.length > 0){
       res.status(200).send(invites)

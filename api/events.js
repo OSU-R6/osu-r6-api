@@ -20,7 +20,8 @@ router.get('/upcoming', async(req, res, next) => {
         const currentDate = new Date();
         const events = await Event.findAll({ 
             where: {date: {[Op.gt]: currentDate} },
-            attributes: ['id', 'description', 'type', 'date']
+            attributes: ['id', 'description', 'type', 'date'],
+            order: [['date', 'ASC']]
         })
         if(events.length > 0) {
             res.status(200).send(events)
