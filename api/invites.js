@@ -15,27 +15,29 @@ const { requireAuthentication, requireAdmin, generateInviteToken} = require('../
 */
 router.post('/', jsonParser, requireAuthentication, requireAdmin, async(req, res, next) => {
   try{
-    if(req.body.team_id != null){
-      if(req.body.is_sub != null) {
-        const inviteToken = generateInviteToken(req.body.team_id, req.body.is_sub)
-        const invite = await Invite.create({ creator_id: req.user, token: inviteToken, team_id: req.body.team_id, is_sub: req.body.is_sub})
-        if(invite != null ){
-            res.status(201).send({
-              success: inviteToken
-            })
-        } else {
-            res.status(500).send({
-              error: "Error Storing Invite"
-            })
-        }
-      } else {
+    if(req.body.is_active != null) {
+      if(!req.body.is_active){
+        req.body.team_id = null
+        req.body.is_sub = null
+      } else if (req.body.team_id == null || req.body.is_sub == null) {
         res.status(400).send({
-          error: "Substitute Status Not Specified"
+          error: "Team or Substitute Status Not Specified"
         })
+      }
+      const inviteToken = generateInviteToken(req.body.is_active, req.body.team_id, req.body.is_sub)
+      const invite = await Invite.create({ creator_id: req.user, token: inviteToken, team_id: req.body.team_id, is_sub: req.body.is_sub, is_active: req.body.is_active})
+      if(invite != null ){
+          res.status(201).send({
+            success: inviteToken
+          })
+      } else {
+          res.status(500).send({
+            error: "Error Storing Invite"
+          })
       }
     } else {
       res.status(400).send({
-        error: "No Team Specified"
+        error: "Active Status Not Specified"
     })
     }
   } catch (err) {

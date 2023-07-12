@@ -1,29 +1,6 @@
 const sequelize = require('../lib/sequelize')
 const {DataTypes} = require('sequelize')
 
-/*
-* Schema for a User
-*/
-const UserSchema = {
-    firstName:           { required: true, type: 'string' },
-    lastName:            { required: true, type: 'string' },
-    email:		           { required: true, type: 'string' },
-    password:	           { required: true, type: 'string' },
-	  admin:		           { required: false, type: 'boolean'},
-    ign:                 { required: true, type: 'string' },
-    uplay:               { required: true, type: 'string' },
-    team_id:             { required: true, type: 'number' },
-    bio:                 { required: false, type: 'string'},
-    pfp:                 { required: false, type: 'string'},
-    role:                { required: true, type: 'string' },
-    is_sub:		           { required: true, type: 'boolean'},
-    twitch:              { required: false, type: 'string'},
-    twitter:             { required: false, type: 'string'},
-    instagram:           { required: false, type: 'string'},
-    youtube:             { required: false, type: 'string'}
-}
-exports.UserSchema = UserSchema
-
 const User = sequelize.define('User', {
   firstName: {
     type: DataTypes.STRING,
@@ -36,11 +13,6 @@ const User = sequelize.define('User', {
   ign: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true,
-  },
-  uplay: {
-    type: DataTypes.STRING,
-    allowNull: true,
     unique: true,
   },
   email: {
@@ -59,9 +31,21 @@ const User = sequelize.define('User', {
     type: DataTypes.BOOLEAN,
     defaultValue: false
   },
+  classification: {
+    type: DataTypes.ENUM('active', 'inactive','community', 'alumni'),
+    allowNull: false
+  },
   team_id: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: function () {
+      return this.classification !== 'active';
+    }
+  },
+  role: {
+    type: DataTypes.STRING,
+    allowNull: function () {
+      return this.classification !== 'active';
+    }
   },
   bio: {
     type: DataTypes.TEXT,
@@ -71,13 +55,10 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  role: {
+  uplay: {
     type: DataTypes.STRING,
-    allowNull: false,
-  },
-  is_sub: {
-    type: DataTypes.BOOLEAN,
-    allowNull: false
+    allowNull: true,
+    unique: true,
   },
   twitch: {
     type: DataTypes.STRING,
@@ -94,6 +75,15 @@ const User = sequelize.define('User', {
   youtube: {
     type: DataTypes.STRING,
     allowNull: true,
+  }
+}, {
+  hooks: {
+    beforeValidate: (user) => {
+      if (user.classification !== 'active') {
+        user.team_id = null; // Set team_id to null when is_active is false
+        user.role = null; // Set role to null when is_active is false
+      }
+    }
   }
 })
 

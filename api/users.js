@@ -7,10 +7,9 @@ const sequelize = require('../lib/sequelize')
 const bodyParser = require('body-parser')
 var jsonParser = bodyParser.json() 
 
-const { User, UserSchema } = require('../models/user')
+const { User } = require('../models/user')
 const { Invite } = require('../models/invite')
 const { Team } = require('../models/team')
-const { validateAgainstSchema } = require('../lib/validation')
 const { requireAuthentication, requireAdmin, generateAuthToken, generateInviteToken, requireInvite, setAuthCookie, clearAuthCookie } = require('../lib/auth')
 const { imageUpload, multerErrorCatch} = require('../lib/multer')
 
@@ -72,39 +71,33 @@ router.get('/GetProfileImage/:user', async(req, res, next) => {
 */
 router.post('/', jsonParser, requireInvite, async (req, res, next) => {
   try {
-    const schemaValidation = validateAgainstSchema(req.body, UserSchema)
-    if(schemaValidation === null){
-      const userToCreate = {
-        firstName: req.body.firstName,
-        lastName: req.body.lastName,
-        ign: req.body.ign,
-        email: req.body.email,
-        role: req.body.role,
-        team_id: req.body.team_id,
-        is_sub: req.body.is_sub
-      }
-      userToCreate.password = await bcrypt.hash(req.body.password, 8)
-      const newUser = await User.create(userToCreate)
-      if( newUser != null) {
-        if( await Invite.update(
-          { usedBy: newUser.id, status: "inactive"},
-          { where: {token: req.token} }
-        ) == null) {
-          res.status(500).send({
-            error: "Error Deactiviating Invite"
-          })
-        } else {
-          res.status(201).send()
-        }
-      } else {
+    const userToCreate = {
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      ign: req.body.ign,
+      email: req.body.email,
+      role: req.body.role,
+      is_active: req.body.is_active,
+      team_id: req.body.team_id,
+      is_sub: req.body.is_sub
+    }
+    userToCreate.password = await bcrypt.hash(req.body.password, 8)
+    const newUser = await User.create(userToCreate)
+    if( newUser != null) {
+      if( await Invite.update(
+        { usedBy: newUser.id, status: "inactive"},
+        { where: {token: req.token} }
+      ) == null) {
         res.status(500).send({
-          error: "Error Creating User"
+          error: "Error Deactiviating Invite"
         })
+      } else {
+        res.status(201).send()
       }
     } else {
-      res.status(400).send({
-        error: schemaValidation
-    })
+      res.status(500).send({
+        error: "Error Creating User"
+      })
     }
   } catch (err) {
     // TODO: Find a way to detemine if error 400 or 409 for proper error handling
