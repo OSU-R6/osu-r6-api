@@ -6,19 +6,31 @@ const {User} = require('../models/user')
 const Team = sequelize.define('Team', {
     name: {
         type: DataTypes.STRING,
-        unique: true,
-        allowNull: true,
-    },
-    coach_id: {
-        type: DataTypes.INTEGER,
-        allowNull: true
+        unique: {
+            msg: 'Team Name Already In Use'
+        },
+        allowNull: false,
+        validate: {
+          notNull: {
+            msg: 'Team Name is Required'
+          }
+        }
     },
     captain_id:{
         type: DataTypes.INTEGER,
         allowNull: true
     },
+    coach_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
+    igl_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
     active:{
         type: DataTypes.BOOLEAN,
+        allowNull: false,
         defaultValue: true
     }
 })

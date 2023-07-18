@@ -10,15 +10,30 @@ const Match = sequelize.define('Match', {
     },
     date: {
       type: DataTypes.DATE,
-      allowNull: false
+      allowNull: false,
+      validate: {
+        notNull: {
+          msg: 'Date Required'
+        }
+      }
     },
     team_id:{
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: false,
+        validate: {
+          notNull: {
+            msg: 'Team ID Required'
+          }
+        }
     },
     opponent: {
         type: DataTypes.STRING,
         allowNull: false,
+        validate: {
+          notNull: {
+            msg: 'Opponent Name Required'
+          }
+        }
     },
     stream_link: {
         type: DataTypes.STRING,

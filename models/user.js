@@ -1,67 +1,87 @@
 const sequelize = require('../lib/sequelize')
 const {DataTypes} = require('sequelize')
 
-/*
-* Schema for a User
-*/
-const UserSchema = {
-    firstName:           { required: true, type: 'string' },
-    lastName:            { required: true, type: 'string' },
-    email:		           { required: true, type: 'string' },
-    password:	           { required: true, type: 'string' },
-	  admin:		           { required: false, type: 'boolean'},
-    ign:                 { required: true, type: 'string' },
-    uplay:               { required: true, type: 'string' },
-    team_id:             { required: true, type: 'number' },
-    bio:                 { required: false, type: 'string'},
-    pfp:                 { required: false, type: 'string'},
-    role:                { required: true, type: 'string' },
-    is_sub:		           { required: true, type: 'boolean'},
-    twitch:              { required: false, type: 'string'},
-    twitter:             { required: false, type: 'string'},
-    instagram:           { required: false, type: 'string'},
-    youtube:             { required: false, type: 'string'}
-}
-exports.UserSchema = UserSchema
-
 const User = sequelize.define('User', {
   firstName: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false,
+    validate: {
+      notNull: {
+        msg: 'First Name is Required'
+      }
+    }
   },
   lastName: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false,
+    validate: {
+      notNull: {
+        msg: 'Last Name is Required'
+      }
+    }
   },
   ign: {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
-  },
-  uplay: {
-    type: DataTypes.STRING,
-    allowNull: true,
-    unique: true,
+    validate: {
+      notNull: {
+        msg: 'IGN is Required'
+      }
+    }
   },
   email: {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
     validate: {
-      isEmail: true
+      isEmail: true,
+      notNull: {
+        msg: 'Email is required'
+      }
     }
   },
   password: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false,
+    validate: {
+      notNull: {
+        msg: 'Password is Required'
+      }
+    }
   },
   admin: {
     type: DataTypes.BOOLEAN,
     defaultValue: false
   },
+  type: {
+    type: DataTypes.ENUM('active', 'inactive','community', 'alumni'),
+    allowNull: false,
+    validate: {
+      notNull: {
+        msg: 'User Type is Required'
+      }
+    }
+  },
   team_id: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    validate: {
+      checkTeamId() {
+        if (this.type === 'active' && this.team_id == null) {
+          throw new Error('Team ID required for active player')
+        }
+      }
+    }
+  },
+  role: {
+    type: DataTypes.STRING,
+    validate: {
+      checkTeamId() {
+        if (this.type === 'active' && this.role == null) {
+          throw new Error('Role required for active player')
+        }
+      }
+    }
   },
   bio: {
     type: DataTypes.TEXT,
@@ -71,13 +91,10 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  role: {
+  uplay: {
     type: DataTypes.STRING,
-    allowNull: false,
-  },
-  is_sub: {
-    type: DataTypes.BOOLEAN,
-    allowNull: false
+    allowNull: true,
+    unique: true,
   },
   twitch: {
     type: DataTypes.STRING,
@@ -94,6 +111,15 @@ const User = sequelize.define('User', {
   youtube: {
     type: DataTypes.STRING,
     allowNull: true,
+  }
+}, {
+  hooks: {
+    beforeValidate: (user) => {
+      if (user.type !== 'active') {
+        user.team_id = null
+        user.role = null
+      }
+    }
   }
 })
 

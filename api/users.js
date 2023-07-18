@@ -3,15 +3,16 @@ const bcrypt = require('bcrypt')
 const fs = require('fs')
 const path = require('path')
 const sequelize = require('../lib/sequelize')
+const { Op } = require('sequelize')
 
 const bodyParser = require('body-parser')
 var jsonParser = bodyParser.json() 
 
-const { User, UserSchema } = require('../models/user')
+const { User } = require('../models/user')
+const { Clip } = require('../models/clip')
 const { Invite } = require('../models/invite')
 const { Team } = require('../models/team')
-const { validateAgainstSchema } = require('../lib/validation')
-const { requireAuthentication, requireAdmin, generateAuthToken, generateInviteToken, requireInvite, setAuthCookie, clearAuthCookie } = require('../lib/auth')
+const { requireAuthentication, requireAdmin, generateAuthToken, requireInvite, setAuthCookie, clearAuthCookie, allowAthentication } = require('../lib/auth')
 const { imageUpload, multerErrorCatch} = require('../lib/multer')
 
 
@@ -20,14 +21,14 @@ const { imageUpload, multerErrorCatch} = require('../lib/multer')
 /* ##################################################################### */
 
 /*
-* Get user's public profile
+* Get User's Public Profile
 */
-router.get('/GetPublicProfile/:user', async(req, res, next) => {
+router.get('/:user', async(req, res, next) => {
   try {
     const user = await User.findOne({
       where: {ign: req.params.user},
       attributes: {
-        exclude: ['password', 'email', 'pfp', 'createdAt', 'updatedAt']
+        exclude: ['admin', 'password', 'email', 'pfp', 'createdAt', 'updatedAt']
       }
     })
     user.pfp = '/users/GetProfileImage/' + user.ign
@@ -46,9 +47,9 @@ router.get('/GetPublicProfile/:user', async(req, res, next) => {
 })
 
 /*
-* Get a profile image for a player
+* Get User Profile Image 
 */
-router.get('/GetProfileImage/:user', async(req, res, next) => {
+router.get('/:user/pfp', async(req, res, next) => {
   try {
     const user = await User.findOne({where: {ign: req.params.user}})
     if(user.pfp != null) {
@@ -66,52 +67,137 @@ router.get('/GetProfileImage/:user', async(req, res, next) => {
   }
 })
 
+
 /*
-* Register new user
+* Get User's Clips
+*/
+router.get('/:user/clips', jsonParser, allowAthentication, async(req, res, nect) => {
+  try {
+    const results = await Clip.findAll({
+      attributes: ['id', 'public', 'spotlight', 'path', 'title', 'createdAt'],
+      where : {
+        [Op.or]: [
+          { public: true },
+          { user_id: req.user }
+        ]
+      },
+      include: {
+        model: User,
+        where: {
+          ign: req.params.user
+        },
+        attributes: ['firstName', 'lastName', 'ign']
+      }
+    })
+    var clips = []
+    results.forEach(element => {
+      clips.push({
+        id: element.id,
+        title: element.title,
+        public: element.public,
+        spotlight: element.spotlight,
+        date: element.createdAt,
+        link: `/clips/${element.id}`
+      })
+    })
+    res.status(200).send({
+      clips: clips
+    })
+  } catch {
+    res.status(500).send({
+      error: "Unable to retrieve videos"
+    })
+  }
+})
+
+/*
+* Get User's Spotlight Clips
+*/
+router.get('/:user/spotlight', jsonParser, async(req, res, nect) => {
+  try {
+    const results = await Clip.findAll({
+      attributes: ['id', 'path', 'title', 'createdAt'],
+      where : {
+        public: true,
+        spotlight: true
+      },
+      include: {
+        model: User,
+        where: {
+          ign: req.params.user
+        },
+        attributes: ['firstName', 'lastName', 'ign']
+      }
+    });
+    var clips = []
+    results.forEach(element => {
+      clips.push({
+        id: element.id,
+        title: element.title,
+        date: element.createdAt,
+        link: `/clips/GetPublicClip/${element.id}`
+      })
+    })
+    res.status(200).send({
+      clips: clips
+    })
+  } catch {
+    res.status(500).send({
+      error: "Unable to retrieve videos"
+    })
+  }
+})
+
+
+/* #####################################################################
+/*              Login/Registration/Authentication Endpoints
+/* ##################################################################### */
+
+/*
+* Register New User
 * Registering user requires admin generated invite
 */
 router.post('/', jsonParser, requireInvite, async (req, res, next) => {
   try {
-    const schemaValidation = validateAgainstSchema(req.body, UserSchema)
-    if(schemaValidation === null){
-      const userToCreate = {
-        firstName: req.body.firstName,
-        lastName: req.body.lastName,
-        ign: req.body.ign,
-        email: req.body.email,
-        role: req.body.role,
-        team_id: req.body.team_id,
-        is_sub: req.body.is_sub
-      }
+    const userToCreate = {
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      ign: req.body.ign,
+      email: req.body.email,
+      type: req.body.type,
+      team_id: req.body.team_id,
+      role: req.body.role
+    }
+    if(req.body.password != null) {
+      // TODO: Validate password vs regex
       userToCreate.password = await bcrypt.hash(req.body.password, 8)
-      const newUser = await User.create(userToCreate)
-      if( newUser != null) {
-        if( await Invite.update(
-          { usedBy: newUser.id, status: "inactive"},
-          { where: {token: req.token} }
-        ) == null) {
-          res.status(500).send({
-            error: "Error Deactiviating Invite"
-          })
-        } else {
-          res.status(201).send()
-        }
-      } else {
+    }
+    const newUser = User.build(userToCreate)
+    try {
+      await newUser.validate()
+      await newUser.save()
+      if( await Invite.update(
+        { usedBy: newUser.id, status: "inactive"},
+        { where: {token: req.token} }
+      ) == null) {
         res.status(500).send({
-          error: "Error Creating User"
+          error: "Error Deactiviating Invite"
         })
+      } else {
+        res.status(201).send()
       }
-    } else {
-      res.status(400).send({
-        error: schemaValidation
-    })
+    } catch (err) {
+      if (err.name === 'SequelizeValidationError') {
+        err = err.errors.map((err) => err.message)
+      }
+        res.status(400).send({
+        error: err
+      })
     }
   } catch (err) {
-    // TODO: Find a way to detemine if error 400 or 409 for proper error handling
       res.status(400).send({
         error: err
       })
-   // }
   }
 })
 
@@ -135,7 +221,6 @@ router.get('/email-availibility/:email', jsonParser, async (req, res, next) => {
   }
 })
 
-
 /*
 * Check IGN Availibility
 */
@@ -157,7 +242,7 @@ router.get('/ign-availibility/:ign', jsonParser, async (req, res, next) => {
 })
 
 /*
-* Login user
+* Login User
 */
 router.post('/login', jsonParser, async(req, res, next) => {
   if(req.body.email && req.body.password){
@@ -209,7 +294,7 @@ router.get('/authenticate', requireAuthentication, async(req, res, next) => {
 })
 
 /*
-* Logout user
+* Logout User
 */
 router.post('/logout', async(req, res, next) => {
   clearAuthCookie(res)
@@ -217,16 +302,28 @@ router.post('/logout', async(req, res, next) => {
 })
 
 /*
-* Update bio
+* Edit User
 */
-router.patch('/UpdateBio', requireAuthentication, jsonParser, async(req, res, next) => {
-  try {
-    if(req.body.bio){
-      const user = await User.update(
-        { bio: req.body.bio },
-        { where: { id : req.user } }
-      )
-      res.status(201).send(user)
+router.patch('/', requireAuthentication, jsonParser, async(req, res, next) => {
+  try{
+    const user = await User.findByPk(req.user)
+    const updatedFields = ['bio', 'uplay', 'twitch', 'twitter', 'youtube', 'instagram']
+
+    updatedFields.forEach(field => {
+      user[field] = req.body[field] || user[field]
+    })
+
+    try {
+      await user.validate()
+      await user.save()
+      res.status(200).send()
+    } catch (err) {
+      if (err.name === 'SequelizeValidationError') {
+        err = err.errors.map((err) => err.message)
+      }
+      res.status(400).send({
+        error: err
+      })
     }
   } catch (err) {
     res.status(500).send({
@@ -236,7 +333,7 @@ router.patch('/UpdateBio', requireAuthentication, jsonParser, async(req, res, ne
 })
 
 /*
-* Upload user profile image
+* Upload User Profile Image
 */
 router.post('/pfp', jsonParser, requireAuthentication, imageUpload.single('image'), multerErrorCatch, async(req, res, next) => {
   try{ 
@@ -287,7 +384,7 @@ router.get('/', requireAuthentication, requireAdmin, async(req, res, next) => {
         include: [
           [
             sequelize.literal('Team.name'),
-            'team'
+            'team_id'
           ]
         ]
       },

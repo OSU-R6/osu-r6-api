@@ -88,30 +88,54 @@ router.get('/upcoming/:team', async(req, res, next) => {
 */
 router.post('/', jsonParser, requireAuthentication, requireAdmin, async(req, res, next) => {
     try {
-        if(req.body.description && req.body.date && req.body.team_id && req.body.opponent){
-            const matchToCreate = {
-                description: req.body.description,
-                date: req.body.date,
-                team_id: req.body.team_id,
-                opponent: req.body.opponent,
-                stream_link: req.body.stream_link
+        const event = Match.build(req.body)
+        try {
+            await event.validate()
+            await event.save()
+            res.status(201).send()
+        } catch (err) {
+            if (err.name === 'SequelizeValidationError') {
+                err = err.errors.map((err) => err.message)
             }
-            const match = await Match.create(matchToCreate)
-            if(match != null){
-                res.status(201).send()
-            } else {
-                res.status(500).send({
-                    error: "Error Creating Match"
-                })
-            }
-        } else {
             res.status(400).send({
-                error: "Missing 'description', 'date', 'team_id' or 'opponent'"
-            }) 
+                error: err
+            })
         }
     } catch (err) {
         res.status(500).send({
             error: "Server Error"
+        })
+    }
+})
+
+/*
+* Edit Match
+*/
+router.patch('/:id', jsonParser, requireAuthentication, requireAdmin, async(req, res, next) => {
+    try {
+        const match = await Match.findByPk(req.params.id)
+        if(match != null) {
+            match.set(req.body)
+            try {
+                await match.validate()
+                await match.save()
+                res.status(200).send()
+            } catch (err) {
+                if (err.name === 'SequelizeValidationError') {
+                    err = err.errors.map((err) => err.message)
+                }
+                res.status(400).send({
+                    error: err
+                })
+            }
+        } else {
+            res.status(404).send({
+                error: "Match Not Found"
+            })
+        }
+    } catch (err) {
+        res.status(500).send({
+            error: err
         })
     }
 })
