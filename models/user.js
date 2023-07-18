@@ -4,47 +4,83 @@ const {DataTypes} = require('sequelize')
 const User = sequelize.define('User', {
   firstName: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false,
+    validate: {
+      notNull: {
+        msg: 'First Name is Required'
+      }
+    }
   },
   lastName: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false,
+    validate: {
+      notNull: {
+        msg: 'Last Name is Required'
+      }
+    }
   },
   ign: {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
+    validate: {
+      notNull: {
+        msg: 'IGN is Required'
+      }
+    }
   },
   email: {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
     validate: {
-      isEmail: true
+      isEmail: true,
+      notNull: {
+        msg: 'Email is required'
+      }
     }
   },
   password: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false,
+    validate: {
+      notNull: {
+        msg: 'Password is Required'
+      }
+    }
   },
   admin: {
     type: DataTypes.BOOLEAN,
     defaultValue: false
   },
-  classification: {
+  type: {
     type: DataTypes.ENUM('active', 'inactive','community', 'alumni'),
-    allowNull: false
+    allowNull: false,
+    validate: {
+      notNull: {
+        msg: 'User Type is Required'
+      }
+    }
   },
   team_id: {
     type: DataTypes.INTEGER,
-    allowNull: function () {
-      return this.classification !== 'active';
+    validate: {
+      checkTeamId() {
+        if (this.type === 'active' && this.team_id == null) {
+          throw new Error('Team ID required for active player')
+        }
+      }
     }
   },
   role: {
     type: DataTypes.STRING,
-    allowNull: function () {
-      return this.classification !== 'active';
+    validate: {
+      checkTeamId() {
+        if (this.type === 'active' && this.role == null) {
+          throw new Error('Role required for active player')
+        }
+      }
     }
   },
   bio: {
@@ -79,9 +115,9 @@ const User = sequelize.define('User', {
 }, {
   hooks: {
     beforeValidate: (user) => {
-      if (user.classification !== 'active') {
-        user.team_id = null; // Set team_id to null when is_active is false
-        user.role = null; // Set role to null when is_active is false
+      if (user.type !== 'active') {
+        user.team_id = null
+        user.role = null
       }
     }
   }

@@ -5,51 +5,55 @@ const {User} = require('../models/user')
 const {Team} = require('../models/team')
 
 const Invite = sequelize.define('Invite', {
-    creator_id: {
+    inviter_id: {
       type: DataTypes.INTEGER,
       allowNull: false
     },
     status: {
         type: DataTypes.ENUM('active', 'inactive'),
+        allowNull: false,
         defaultValue: 'active'
     },
-    is_active: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false
-    },
+    type: {
+        type: DataTypes.ENUM('active', 'inactive','community', 'alumni'),
+        allowNull: false,
+        validate: {
+            notNull: {
+              msg: 'User Type Required'
+            }
+        }
+      },
     team_id: {
         type: DataTypes.INTEGER,
-        allowNull: function () {
-            return !this.is_active;
-        }
-    },
-    is_sub: {
-        type: DataTypes.BOOLEAN,
-        allowNull: function () {
-            return !this.is_active;
-        }
+        allowNull: true,
+        validate: {
+            checkTeamId() {
+              if (this.type === 'active' && this.team_id == null) {
+                throw new Error('Team ID required for active invite')
+              }
+            }
+          }
     },
     token: {
         type: DataTypes.STRING,
         allowNull: false,
     },
-    used_by_id: {
+    invitee_id: {
         type: DataTypes.INTEGER,
         allowNull: true
     }
 }, {
     hooks: {
         beforeValidate: (invite) => {
-            if (!invite.is_active) {
-                invite.team_id = null; // Set team_id to null when is_active is false
-                invite.is_sub = null; // Set is_sub to null when is_active is false
+            if (invite.type !== 'active') {
+                invite.team_id = null
             }
         }
     }
 })
 
-Invite.belongsTo(User, { foreignKey: 'creator_id', as: 'Creator' });
-Invite.belongsTo(User, { foreignKey: 'used_by_id', as: 'InvitedUser' });
-Invite.belongsTo(Team, { foreignKey: 'team_id' });
+Invite.belongsTo(User, { foreignKey: 'inviter_id', as: 'Inviter' })
+Invite.belongsTo(User, { foreignKey: 'invitee_id', as: 'Invitee' })
+Invite.belongsTo(Team, { foreignKey: 'team_id' })
 
 exports.Invite = Invite

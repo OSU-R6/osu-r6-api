@@ -15,34 +15,31 @@ const { requireAuthentication, requireAdmin, generateInviteToken} = require('../
 */
 router.post('/', jsonParser, requireAuthentication, requireAdmin, async(req, res, next) => {
   try{
-    if(req.body.is_active != null) {
-      if(!req.body.is_active){
-        req.body.team_id = null
-        req.body.is_sub = null
-      } else if (req.body.team_id == null || req.body.is_sub == null) {
+    const inviteToken = generateInviteToken(req.body.type, req.body.team_id)
+    const inviteToCreate = {
+      inviter_id: req.user,
+      token: inviteToken,
+      type: req.body.type,
+      team_id: req.body.team_id
+    }
+    const invite = await Invite.build(inviteToCreate)
+    try {
+      await invite.validate()
+      await invite.save()
+      res.status(201).send({
+        success: inviteToken
+      })
+    } catch (err) {
+      if (err.name === 'SequelizeValidationError') {
+        err = err.errors.map((err) => err.message)
+      }
         res.status(400).send({
-          error: "Team or Substitute Status Not Specified"
-        })
-      }
-      const inviteToken = generateInviteToken(req.body.is_active, req.body.team_id, req.body.is_sub)
-      const invite = await Invite.create({ creator_id: req.user, token: inviteToken, team_id: req.body.team_id, is_sub: req.body.is_sub, is_active: req.body.is_active})
-      if(invite != null ){
-          res.status(201).send({
-            success: inviteToken
-          })
-      } else {
-          res.status(500).send({
-            error: "Error Storing Invite"
-          })
-      }
-    } else {
-      res.status(400).send({
-        error: "Active Status Not Specified"
-    })
+        error: err
+      })
     }
   } catch (err) {
     res.status(500).send({
-      error: "Error Generating Invite"
+      error: err
     })
   }
 })
@@ -67,7 +64,7 @@ router.get('/active', requireAuthentication, requireAdmin, async(req, res, next)
         },
         {
           model: User,
-          as: 'Creator',
+          as: 'Inviter',
           attributes: ['ign']
         }
       ]
@@ -104,12 +101,12 @@ router.get('/inactive', requireAuthentication, requireAdmin, async(req, res, nex
         },
         {
           model: User,
-          as: 'Creator',
+          as: 'Inviter',
           attributes: ['ign']
         },
         {
           model: User,
-          as: 'InvitedUser',
+          as: 'Invitee',
           attributes: ['ign']
         }
       ]
@@ -149,7 +146,7 @@ router.get('/expired', requireAuthentication, requireAdmin, async(req, res, next
         },
         {
           model: User,
-          as: 'Creator',
+          as: 'Inviter',
           attributes: ['ign']
         }
       ]
@@ -175,11 +172,11 @@ router.delete('/expired', requireAuthentication, requireAdmin, async(req, res, n
   try {
     const currentDate = new Date();
     const twentyFourHoursAgo = new Date();
-    twentyFourHoursAgo.setHours(currentDate.getHours() - 24);
+    twentyFourHoursAgo.setHours(currentDate.getHours() - 24)
     const invites = await Invite.destroy({
       where: {
         status: "active",
-        used_by_id: null,
+        invitee_id: null,
         createdAt: {[Op.lt]: twentyFourHoursAgo}
       }
     })
