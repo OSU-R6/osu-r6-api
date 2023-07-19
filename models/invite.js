@@ -1,9 +1,6 @@
 const sequelize = require('../lib/sequelize')
 const {DataTypes} = require('sequelize')
 
-const {User} = require('../models/user')
-const {Team} = require('../models/team')
-
 const Invite = sequelize.define('Invite', {
     inviter_id: {
       type: DataTypes.INTEGER,
@@ -43,6 +40,7 @@ const Invite = sequelize.define('Invite', {
         allowNull: true
     }
 }, {
+    paranoid: true,
     hooks: {
         beforeValidate: (invite) => {
             if (invite.type !== 'active') {
@@ -51,9 +49,5 @@ const Invite = sequelize.define('Invite', {
         }
     }
 })
-
-Invite.belongsTo(User, { foreignKey: 'inviter_id', as: 'Inviter' })
-Invite.belongsTo(User, { foreignKey: 'invitee_id', as: 'Invitee' })
-Invite.belongsTo(Team, { foreignKey: 'team_id' })
 
 exports.Invite = Invite

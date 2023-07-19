@@ -5,8 +5,7 @@ var jsonParser = bodyParser.json()
 
 const {requireAuthentication, requireAdmin} = require('../lib/auth')
 
-const {Event} = require('../models/event');
-const e = require('express');
+const { Event } = require('../models/index')
 
 
 /* #####################################################################

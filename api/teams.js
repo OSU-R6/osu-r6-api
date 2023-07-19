@@ -4,8 +4,7 @@ var jsonParser = bodyParser.json()
 
 const {requireAuthentication, requireAdmin} = require('../lib/auth')
 
-const {Team} = require('../models/team')
-const {User} = require('../models/user')
+const { User, Team } = require('../models/index')
 
 
 /* #####################################################################
@@ -116,6 +115,20 @@ router.patch('/:team_id', jsonParser, requireAuthentication, requireAdmin, async
                 error: "Team Not Found"
             })
         }
+    } catch (err) {
+        res.status(500).send({
+            error: "Server Error"
+        })
+    }
+})
+
+/*
+* Delete Team
+*/
+router.delete('/:id', requireAuthentication, requireAdmin, async(req, res, next) => {
+    try{
+        Team.destroy({where: {id: req.params.id}})
+        res.status(204).send()
     } catch (err) {
         res.status(500).send({
             error: "Server Error"

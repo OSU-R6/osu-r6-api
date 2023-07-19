@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 
 const api = require('./api');
-const sequelize = require('./lib/sequelize')
+//const sequelize = require('./lib/sequelize')
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -27,8 +27,8 @@ app.use('*', function (req, res, next) {
   });
 });
 
-sequelize.sync().then(function () {
+//sequelize.sync().then(function () {
   app.listen(port, () => {
     console.log("== Server is running on port", port);
   });
-});
+//});
