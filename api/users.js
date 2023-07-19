@@ -8,10 +8,7 @@ const { Op } = require('sequelize')
 const bodyParser = require('body-parser')
 var jsonParser = bodyParser.json() 
 
-const { User } = require('../models/user')
-const { Clip } = require('../models/clip')
-const { Invite } = require('../models/invite')
-const { Team } = require('../models/team')
+const { User, Clip, Invite, Team } = require('../models/index')
 const { requireAuthentication, requireAdmin, generateAuthToken, requireInvite, setAuthCookie, clearAuthCookie, allowAthentication } = require('../lib/auth')
 const { imageUpload, multerErrorCatch} = require('../lib/multer')
 
@@ -407,6 +404,20 @@ router.get('/', requireAuthentication, requireAdmin, async(req, res, next) => {
     res.status(500).send({
       error: "Server Error"
     })
+  }
+})
+
+/*
+* Delete User
+*/
+router.delete('/:id', requireAuthentication, requireAdmin, async(req, res, next) => {
+  try{
+      User.destroy({where: {id: req.params.id}})
+      res.status(204).send()
+  } catch (err) {
+      res.status(500).send({
+          error: "Server Error"
+      })
   }
 })
 

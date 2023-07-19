@@ -5,8 +5,7 @@ var jsonParser = bodyParser.json()
 
 const {requireAuthentication, requireAdmin} = require('../lib/auth')
 
-const {Match} = require('../models/match')
-const {Team} = require('../models/team')
+const { Match, Team } = require('../models/index')
 
 
 /* #####################################################################

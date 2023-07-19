@@ -5,9 +5,7 @@ const sequelize = require('../lib/sequelize')
 const bodyParser = require('body-parser')
 var jsonParser = bodyParser.json() 
 
-const { Invite } = require('../models/invite')
-const { User } = require('../models/user')
-const { Team } = require('../models/team')
+const { User, Invite, Team } = require('../models/index')
 const { requireAuthentication, requireAdmin, generateInviteToken} = require('../lib/auth')
 
 /*

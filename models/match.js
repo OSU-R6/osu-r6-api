@@ -1,8 +1,6 @@
 const sequelize = require('../lib/sequelize')
 const {DataTypes} = require('sequelize')
 
-const {Team} = require('../models/team')
-
 const Match = sequelize.define('Match', {
     description: {
         type: DataTypes.STRING,
@@ -39,8 +37,8 @@ const Match = sequelize.define('Match', {
         type: DataTypes.STRING,
         allowNull: true,
     }
+}, {
+  paranoid: true
 })
-
-Match.belongsTo(Team, { foreignKey: 'team_id' });
 
 exports.Match = Match

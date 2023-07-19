@@ -161,7 +161,7 @@ router.delete('/:clip', requireAuthentication, async(req, res, next) => {
             await Clip.destroy({ where: { id : req.params.clip } })
             res.status(204).send()
           }
-        });
+        })
       } else {
         res.status(401).send({
           error: "Unauthorized"
