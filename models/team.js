@@ -29,6 +29,8 @@ const Team = sequelize.define('Team', {
         allowNull: false,
         defaultValue: true
     }
+}, {
+    paranoid: true
 })
 
 exports.Team = Team
