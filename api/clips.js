@@ -28,7 +28,7 @@ router.get('/', async (req, res, next) => {
             user_id: element.user_id,
             title: element.title,
             date: element.createdAt,
-            link: `/clips/GetPublicClip/${element.id}`
+            link: `/clips/${element.id}`
           })
         });
         res.status(200).send({
@@ -179,4 +179,4 @@ router.delete('/:clip', requireAuthentication, async(req, res, next) => {
   }
 })
 
-module.exports = router;
+module.exports = router
