@@ -137,4 +137,4 @@ router.delete('/:id', requireAuthentication, requireAdmin, async(req, res, next)
 })
 
 
-module.exports = router;  
+module.exports = router

@@ -28,7 +28,7 @@ router.get('/:user', async(req, res, next) => {
         exclude: ['admin', 'password', 'email', 'pfp', 'createdAt', 'updatedAt']
       }
     })
-    user.pfp = '/users/GetProfileImage/' + user.ign
+    user.pfp = '/users/' + user.ign + '/pfp'
     if(user != null){
       res.status(200).send(user)
     } else {
@@ -132,7 +132,7 @@ router.get('/:user/spotlight', jsonParser, async(req, res, nect) => {
         id: element.id,
         title: element.title,
         date: element.createdAt,
-        link: `/clips/GetPublicClip/${element.id}`
+        link: `/clips/${element.id}`
       })
     })
     res.status(200).send({
@@ -279,18 +279,6 @@ router.post('/login', jsonParser, async(req, res, next) => {
 /* ##################################################################### */
 
 /*
-* Login Check
-*/
-router.get('/authenticate', requireAuthentication, async(req, res, next) => {
-  const user = await User.findByPk(req.user, {
-    attributes: {
-      exclude: ['password', 'createdAt', 'updatedAt']
-    }
-  })
-  res.status(200).send(user)
-})
-
-/*
 * Logout User
 */
 router.post('/logout', async(req, res, next) => {
@@ -377,18 +365,13 @@ router.get('/', requireAuthentication, requireAdmin, async(req, res, next) => {
   try {
     const users = await User.findAll({
       attributes: {
-        exclude: ['password', 'email', 'pfp', 'createdAt', 'updatedAt'],
-        include: [
-          [
-            sequelize.literal('Team.name'),
-            'team_id'
-          ]
-        ]
+        exclude: ['password', 'email', 'pfp', 'createdAt', 'updatedAt']
       },
       include: [
         {
           model: Team,
-          attributes: []
+          attributes: ['name'],
+          as: 'team'
         }
       ]
     })
@@ -400,7 +383,6 @@ router.get('/', requireAuthentication, requireAdmin, async(req, res, next) => {
       })
     }
   } catch (err) {
-    console.log(err)
     res.status(500).send({
       error: "Server Error"
     })
@@ -422,4 +404,4 @@ router.delete('/:id', requireAuthentication, requireAdmin, async(req, res, next)
 })
 
 
-module.exports = router;
+module.exports = router

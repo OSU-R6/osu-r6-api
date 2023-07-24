@@ -58,11 +58,12 @@ router.get('/active', requireAuthentication, requireAdmin, async(req, res, next)
       include: [
         {
           model: Team,
+          as: 'team',
           attributes: ['name']
         },
         {
           model: User,
-          as: 'Inviter',
+          as: 'inviter',
           attributes: ['ign']
         }
       ]
@@ -75,7 +76,6 @@ router.get('/active', requireAuthentication, requireAdmin, async(req, res, next)
       })
     }
   } catch (err) {
-    console.log(err)
     res.status(500).send({
       error: "Server Error"
     })
@@ -95,16 +95,17 @@ router.get('/inactive', requireAuthentication, requireAdmin, async(req, res, nex
       include: [
         {
           model: Team,
+          as: 'team',
           attributes: ['name']
         },
         {
           model: User,
-          as: 'Inviter',
+          as: 'inviter',
           attributes: ['ign']
         },
         {
           model: User,
-          as: 'Invitee',
+          as: 'invitee',
           attributes: ['ign']
         }
       ]
@@ -117,7 +118,6 @@ router.get('/inactive', requireAuthentication, requireAdmin, async(req, res, nex
       })
     }
   } catch (err) {
-    console.log(err)
     res.status(500).send({
       error: "Server Error"
     })
@@ -140,11 +140,12 @@ router.get('/expired', requireAuthentication, requireAdmin, async(req, res, next
       include: [
         {
           model: Team,
+          as: 'team',
           attributes: ['name']
         },
         {
           model: User,
-          as: 'Inviter',
+          as: 'inviter',
           attributes: ['ign']
         }
       ]
@@ -186,4 +187,4 @@ router.delete('/expired', requireAuthentication, requireAdmin, async(req, res, n
   }
 })
 
-module.exports = router;
+module.exports = router
