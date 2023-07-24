@@ -76,7 +76,6 @@ router.get('/active', requireAuthentication, requireAdmin, async(req, res, next)
       })
     }
   } catch (err) {
-    console.log(err)
     res.status(500).send({
       error: "Server Error"
     })
@@ -119,7 +118,6 @@ router.get('/inactive', requireAuthentication, requireAdmin, async(req, res, nex
       })
     }
   } catch (err) {
-    console.log(err)
     res.status(500).send({
       error: "Server Error"
     })
