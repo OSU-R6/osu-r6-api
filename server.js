@@ -1,16 +1,19 @@
-const express = require('express');
-const cors = require('cors');
+const express = require('express')
+const cors = require('cors')
+const https = require('https')
+const fs = require('fs')
 
-const api = require('./api');
-const sequelize = require('./lib/sequelize')
+const api = require('./api')
 
 const app = express();
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || 8443;
 
 app.use(cors({
-  origin: 'http://localhost',
+  origin: true,
   credentials: true
 }));
+
+app.options('*', cors());
 
 app.use('/', api);
 
@@ -27,8 +30,17 @@ app.use('*', function (req, res, next) {
   });
 });
 
-sequelize.sync().then(function () {
-  app.listen(port, () => {
-    console.log("== Server is running on port", port);
-  });
-});
+
+const privateKey = fs.readFileSync('ssl/privkey.pem')
+const certificate = fs.readFileSync('ssl/fullchain.pem')
+
+// Create HTTPS server instance
+const server = https.createServer({
+  key: privateKey,
+  cert: certificate
+}, app);
+
+
+server.listen(port, () => {
+  console.log("== Server is running on port", port);
+})
