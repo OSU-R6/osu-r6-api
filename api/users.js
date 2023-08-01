@@ -145,6 +145,35 @@ router.get('/:user/spotlight', jsonParser, async(req, res, nect) => {
   }
 })
 
+/*
+* Get List of Alumni Users
+*/
+router.get('/list/:type', async(req, res, next) => {
+  try {
+    if(req.params.type != 'alumni' && req.params.type != 'active' && req.params.type != 'community') {
+      res.status(400).send({
+        error: "Invalid User Type"
+      })
+    } else {
+      const users = await User.findAll({
+        where: {type: req.params.type},
+        attributes: ['id', 'ign']
+      })
+      if(users.length > 0) {
+        res.status(200).send(users)
+      } else {
+        res.status(404).send({
+          error: "No Users Found"
+        })
+      }
+    }
+  } catch {
+    res.status(500).send({
+      error: "Unable to retrieve users"
+    })
+  }
+})
+
 
 /* #####################################################################
 /*              Login/Registration/Authentication Endpoints

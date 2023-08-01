@@ -111,10 +111,12 @@ router.patch('/:clip', requireAuthentication, jsonParser, async(req, res, next) 
     const clip = await Clip.findByPk(req.params.clip)
     if(clip != null){
       if(clip.user_id == req.user){
+        console.log(req.body)
         const updatedFields = ['title', 'public', 'spotlight']
         updatedFields.forEach(field => {
           clip[field] = req.body[field] || clip[field]
         })
+        //console.log(clip)
         try {
           await clip.validate()
           await clip.save()
