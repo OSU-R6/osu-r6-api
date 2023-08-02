@@ -2,8 +2,8 @@ const router = require('express').Router()
 const bcrypt = require('bcrypt')
 const fs = require('fs')
 const path = require('path')
-const sequelize = require('../lib/sequelize')
 const { Op } = require('sequelize')
+const ffmpeg = require('fluent-ffmpeg')
 
 const bodyParser = require('body-parser')
 var jsonParser = bodyParser.json() 
@@ -356,14 +356,34 @@ router.post('/pfp', jsonParser, requireAuthentication, imageUpload.single('image
         error: "PNG or JPG File Required"
       })
     } else {
-      var user = await User.findByPk(req.user)
-      if(user.pfp != null){
-        const filePath = path.join(__dirname, '/uploads/profile-images/', user.pfp);
-        fs.unlink(filePath, async(err) => {
-          if (err) {
-            res.status(404).send({
-              error: "Error removing existing profile image"
-            })
+      // Resize Image
+      const resizedPath = path.join(__dirname, '/uploads/profile-images/', req.user + req.file.filename)
+      ffmpeg(req.file.path)
+        .size('500x1000')
+        .output(resizedPath)
+        .on('end', async() => {
+          var user = await User.findByPk(req.user)
+          if(user.pfp != null){
+            fs.unlink(req.file.path, async(err) => { // Remove original image
+              if (err) {
+                res.status(500).send({
+                  error: "Error removing original profile image"
+                })
+              } else {
+                const filePath = path.join(__dirname, '/uploads/profile-images/', user.pfp)
+                fs.unlink(filePath, async(err) => { // Remove existing pfp
+                  if (err) {
+                    res.status(500).send({
+                      error: "Error removing existing profile image"
+                    })
+                  } else {
+                    user = await User.update(
+                      {pfp: req.user + req.file.filename},
+                      {where: {id: req.user}}
+                    )
+                    res.status(201).send()
+                }})
+            }})
           } else {
             user = await User.update(
               {pfp: req.file.filename},
@@ -371,14 +391,13 @@ router.post('/pfp', jsonParser, requireAuthentication, imageUpload.single('image
             )
             res.status(201).send()
           }
-        });
-      } else {
-        user = await User.update(
-          {pfp: req.file.filename},
-          {where: {id: req.user}}
-        )
-        res.status(201).send()
-      }
+        })
+        .on('error', (err) => {
+          res.status(500).send({
+            error: "Error Resizing Image"
+          })
+        })
+        .run()
     }
   } catch {
     res.status(500).send({

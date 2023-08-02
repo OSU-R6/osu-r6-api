@@ -78,11 +78,8 @@ router.post('/', jsonParser, requireAuthentication, videoUpload.single('video'),
         error: "MP4 File Required"
       })
     } else {
-
-
       // Compress Video
       const compressedVideoPath = path.join(__dirname, '/uploads/player-clips/', 'compressed_' + req.file.filename)
-
       ffmpeg(req.file.path)
         .output(compressedVideoPath)
         .outputOptions('-r 30') // Set the frame rate to 30 FPS
@@ -117,8 +114,7 @@ router.post('/', jsonParser, requireAuthentication, videoUpload.single('video'),
             }
         })
         })
-        .on('error', (error) => {
-          console.log(error)
+        .on('error', (err) => {
           res.status(500).send({
             error: "Error Compressing Video"
           })
@@ -140,12 +136,10 @@ router.patch('/:clip', requireAuthentication, jsonParser, async(req, res, next) 
     const clip = await Clip.findByPk(req.params.clip)
     if(clip != null){
       if(clip.user_id == req.user){
-        console.log(req.body)
         const updatedFields = ['title', 'public', 'spotlight']
         updatedFields.forEach(field => {
           clip[field] = req.body[field] || clip[field]
         })
-        //console.log(clip)
         try {
           await clip.validate()
           await clip.save()
@@ -186,7 +180,6 @@ router.delete('/:clip', requireAuthentication, async(req, res, next) => {
         const filePath = path.join(__dirname, '/uploads/player-clips/', clip.path)
         fs.unlink(filePath, async(err) => {
           if (err) {
-            console.log(err)
             res.status(404).send({
               error: "Error removing clip"
             })
