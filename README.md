@@ -17,7 +17,7 @@ This is the API to serve all data to the Oregon State Rainbow Six web applicatio
 
 ## DB Initialization
 
-#### Prerequisites: Docker 
+#### Prerequisites: Docker, FFmpeg, Node.js, npm 
 
 #### Execute ./init/init.bat on Windows (or ./init/init.sh on Linux or MacOS) to create MySQL docker container and to populate the test data in player-clips and profile-images within ./api/uploads
 
