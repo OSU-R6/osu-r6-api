@@ -3,7 +3,7 @@ const cors = require('cors')
 const https = require('https')
 const fs = require('fs')
 
-const api = require('./api')
+const api = require('./api');
 
 const app = express();
 const port = process.env.PORT || 8443;
@@ -30,7 +30,6 @@ app.use('*', function (req, res, next) {
   });
 });
 
-
 const privateKey = fs.readFileSync('ssl/privkey.pem')
 const certificate = fs.readFileSync('ssl/fullchain.pem')
 
@@ -44,3 +43,4 @@ const server = https.createServer({
 server.listen(port, () => {
   console.log("== Server is running on port", port);
 })
+

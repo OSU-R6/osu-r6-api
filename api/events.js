@@ -5,7 +5,7 @@ var jsonParser = bodyParser.json()
 
 const {requireAuthentication, requireAdmin} = require('../lib/auth')
 
-const {Event} = require('../models/event')
+const { Event } = require('../models/index')
 
 
 /* #####################################################################
@@ -20,7 +20,8 @@ router.get('/upcoming', async(req, res, next) => {
         const currentDate = new Date();
         const events = await Event.findAll({ 
             where: {date: {[Op.gt]: currentDate} },
-            attributes: ['id', 'description', 'type', 'date']
+            attributes: ['id', 'description', 'type', 'date'],
+            order: [['date', 'ASC']]
         })
         if(events.length > 0) {
             res.status(200).send(events)
@@ -46,28 +47,54 @@ router.get('/upcoming', async(req, res, next) => {
 */
 router.post('/', jsonParser, requireAuthentication, requireAdmin, async(req, res, next) => {
     try {
-        if(req.body.description && req.body.date && req.body.type){
-            const eventToCreate = {
-                description: req.body.description,
-                date: req.body.date,
-                type: req.body.type
+        const event = Event.build(req.body)
+        try {
+            await event.validate()
+            await event.save()
+            res.status(201).send()
+        } catch (err) {
+            if (err.name === 'SequelizeValidationError') {
+                err = err.errors.map((err) => err.message)
             }
-            const event = await Event.create(eventToCreate)
-            if(event != null){
-                res.status(201).send()
-            } else {
-                res.status(500).send({
-                    error: "Error Creating Event"
-                })
-            }
-        } else  {
             res.status(400).send({
-                error: "Missing 'description', 'date' or 'type'"
+                error: err
             })
         }
     } catch (err) {
         res.status(500).send({
             error: "Server Error"
+        })
+    }
+})
+
+/*
+* Edit Event
+*/
+router.patch('/:id', jsonParser, requireAuthentication, requireAdmin, async(req, res, next) => {
+    try {
+        const event = await Event.findByPk(req.params.id)
+        if(event != null) {
+            event.set(req.body)
+            try {
+                await event.validate()
+                await event.save()
+                res.status(200).send()
+            } catch (err) {
+                if (err.name === 'SequelizeValidationError') {
+                    err = err.errors.map((err) => err.message)
+                }
+                res.status(400).send({
+                    error: err
+                })
+            }
+        } else {
+            res.status(404).send({
+                error: "Event Not Found"
+            })
+        }
+    } catch (err) {
+        res.status(500).send({
+            error: err
         })
     }
 })
@@ -86,4 +113,4 @@ router.delete('/:id', requireAuthentication, requireAdmin, async(req, res, next)
     }
 })
 
-module.exports = router;
+module.exports = router

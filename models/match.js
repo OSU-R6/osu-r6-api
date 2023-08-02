@@ -1,8 +1,6 @@
 const sequelize = require('../lib/sequelize')
 const {DataTypes} = require('sequelize')
 
-const {Team} = require('../models/team')
-
 const Match = sequelize.define('Match', {
     description: {
         type: DataTypes.STRING,
@@ -10,22 +8,37 @@ const Match = sequelize.define('Match', {
     },
     date: {
       type: DataTypes.DATE,
-      allowNull: false
+      allowNull: false,
+      validate: {
+        notNull: {
+          msg: 'Date Required'
+        }
+      }
     },
     team_id:{
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: false,
+        validate: {
+          notNull: {
+            msg: 'Team ID Required'
+          }
+        }
     },
     opponent: {
         type: DataTypes.STRING,
         allowNull: false,
+        validate: {
+          notNull: {
+            msg: 'Opponent Name Required'
+          }
+        }
     },
     stream_link: {
         type: DataTypes.STRING,
         allowNull: true,
     }
+}, {
+  paranoid: true
 })
-
-Match.belongsTo(Team, { foreignKey: 'team_id' });
 
 exports.Match = Match
