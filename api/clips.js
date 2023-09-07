@@ -1,6 +1,7 @@
 const router = require('express').Router()
 const fs = require('fs')
 const path = require('path')
+const ffmpeg = require('fluent-ffmpeg')
 
 const bodyParser = require('body-parser')
 var jsonParser = bodyParser.json()
@@ -48,7 +49,7 @@ router.get('/:clip', jsonParser, allowAthentication, async(req, res, next) => {
   try { 
     const clip = await Clip.findByPk(req.params.clip)
     if(clip.public || req.user === clip.user_id){
-      const filePath = path.join(__dirname, '/uploads/player-clips/', clip.path);
+      const filePath = path.join(__dirname, '/uploads/player-clips/', clip.path)
       res.sendFile(filePath)
     } else {
       res.status(401).send({
@@ -77,24 +78,48 @@ router.post('/', jsonParser, requireAuthentication, videoUpload.single('video'),
         error: "MP4 File Required"
       })
     } else {
-      uploadObject = {
-        title: req.body.title,
-        user_id: req.user,
-        path: req.file.filename
-      }
-      const newUpload = await Clip.create(uploadObject)
-      if(newUpload != null){
-        res.status(201).send({
-          title: newUpload.title,
-          public: newUpload.public,
-          date: newUpload.createdAt,
-          link: `/clips/GetPrivateClip/${newUpload.id}`
+      // Compress Video
+      const compressedVideoPath = path.join(__dirname, '/uploads/player-clips/', 'compressed_' + req.file.filename)
+      ffmpeg(req.file.path)
+        .output(compressedVideoPath)
+        .outputOptions('-r 30') // Set the frame rate to 30 FPS
+        //.outputOptions('-s 1280x720') // Set the frame size to 1280x720
+        .outputOptions('-aspect 16:9') // Set the aspect ratio to 16:9
+        .videoBitrate('2000k') // Set the desired video bitrate for compression
+        .on('end', () => {
+          fs.unlink(req.file.path, async(err) => {
+            if (err) {
+              res.status(500).send({
+                error: "Error Removing Uncompressed Video"
+              })
+            } else {
+              uploadObject = {
+                title: req.body.title,
+                user_id: req.user,
+                path: 'compressed_' + req.file.filename
+              }
+              const newUpload = await Clip.create(uploadObject)
+              if(newUpload != null){
+                res.status(201).send({
+                  title: newUpload.title,
+                  public: newUpload.public,
+                  date: newUpload.createdAt,
+                  link: `/clips/${newUpload.id}`
+                })
+              } else {
+                res.status(500).send({
+                  error: "Error Uploading Video"
+                })
+              }
+            }
         })
-      } else {
-        res.status(500).send({
-          error: "Error Uploading Video"
         })
-      }
+        .on('error', (err) => {
+          res.status(500).send({
+            error: "Error Compressing Video"
+          })
+        })
+        .run();
     }
   } catch {
     res.status(500).send({
@@ -111,12 +136,10 @@ router.patch('/:clip', requireAuthentication, jsonParser, async(req, res, next) 
     const clip = await Clip.findByPk(req.params.clip)
     if(clip != null){
       if(clip.user_id == req.user){
-        console.log(req.body)
         const updatedFields = ['title', 'public', 'spotlight']
         updatedFields.forEach(field => {
           clip[field] = req.body[field] || clip[field]
         })
-        //console.log(clip)
         try {
           await clip.validate()
           await clip.save()
@@ -154,7 +177,8 @@ router.delete('/:clip', requireAuthentication, async(req, res, next) => {
     const clip = await Clip.findByPk(req.params.clip)
     if(clip != null){
       if(clip.user_id == req.user){
-        fs.unlink(clip.path, async(err) => {
+        const filePath = path.join(__dirname, '/uploads/player-clips/', clip.path)
+        fs.unlink(filePath, async(err) => {
           if (err) {
             res.status(404).send({
               error: "Error removing clip"

@@ -14,7 +14,6 @@ app.use(cors({
 app.use('/', api)
 
 app.use('*', function (err, req, res, next) {
-  console.error(err)
   res.status(500).send({
     error: "An error occurred. Try again later."
   })
