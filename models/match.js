@@ -35,7 +35,19 @@ const Match = sequelize.define('Match', {
     },
     stream_link: {
         type: DataTypes.STRING,
-        allowNull: true,
+        allowNull: true
+    },
+    vod_link: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    team_score: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
+    opponent_score: {
+        type: DataTypes.INTEGER,
+        allowNull: true
     }
 }, {
   paranoid: true
