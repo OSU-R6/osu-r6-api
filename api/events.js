@@ -20,7 +20,7 @@ router.get('/upcoming', async(req, res, next) => {
         const currentDate = new Date();
         const events = await Event.findAll({ 
             where: {date: {[Op.gt]: currentDate} },
-            attributes: ['id', 'description', 'type', 'date'],
+            attributes: ['id', 'title', 'description', 'type', 'date'],
             order: [['date', 'ASC']]
         })
         if(events.length > 0) {
@@ -28,6 +28,31 @@ router.get('/upcoming', async(req, res, next) => {
         } else {
             res.status(404).send({
                 error: "No Upcoming Events Found"
+            })
+        }
+    } catch (err) {
+        res.status(500).send({
+            error: "Server Error"
+        })
+    }
+})
+
+/*
+* Get Past Events
+*/
+router.get('/past', async(req, res, next) => {
+    try {
+        const currentDate = new Date();
+        const events = await Event.findAll({ 
+            where: {date: {[Op.lt]: currentDate} },
+            attributes: ['id', 'title', 'description', 'type', 'date'],
+            order: [['date', 'ASC']]
+        })
+        if(events.length > 0) {
+            res.status(200).send(events)
+        } else {
+            res.status(404).send({
+                error: "No past Events Found"
             })
         }
     } catch (err) {

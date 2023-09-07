@@ -20,7 +20,9 @@ router.get('/upcoming', async(req, res, next) => {
         const currentDate = new Date();
         const matches = await Match.findAll({ 
             where: {date: {[Op.gt]: currentDate} },
-            attributes: ['id', 'description', 'team_id', 'opponent', 'date', 'stream_link'],
+            attributes: {
+                exclude: ['createdAt', 'updatedAt']
+            },
             order: [['date', 'ASC']],
             include: [
                 {
@@ -39,6 +41,39 @@ router.get('/upcoming', async(req, res, next) => {
     } catch (err) {
         res.status(500).send({
             error: "Server Error"
+        })
+    }
+})
+
+/*
+* Get Past Matches
+*/
+router.get('/past', async(req, res, next) => {
+    try {
+        const currentDate = new Date();
+        const matches = await Match.findAll({ 
+            where: {date: {[Op.lt]: currentDate} },
+            attributes: {
+                exclude: ['createdAt', 'updatedAt']
+            },
+            order: [['date', 'ASC']],
+            include: [
+                {
+                  model: Team,
+                  attributes: ['name']
+                }
+            ]
+        })
+        if(matches.length > 0) {
+            res.status(200).send(matches)
+        } else {
+            res.status(404).send({
+                error: "No Past Matches Found"
+            })
+        }
+    } catch (err) {
+        res.status(500).send({
+            error: err
         })
     }
 })

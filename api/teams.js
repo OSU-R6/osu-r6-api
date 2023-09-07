@@ -57,10 +57,54 @@ router.get('/:team/roster', async(req, res, next) => {
     }
   })
 
+  /*
+* Get Team Info
+*/
+router.get('/:team/info', async(req, res, next) => {
+    try{
+        const team = await Team.findByPk(req.params.team, { 
+            attributes: ['id', 'name', 'coach_id', 'captain_id', 'igl_id']
+        })
+        if(team != null) {
+            res.status(200).send(team)
+        } else {
+            res.status(404).send({
+                error: "Team Not Found"
+            })
+        }
+    } catch (err) {
+        res.status(500).send({
+            error: "Server Error"
+        })
+    }
+  })
+
 
 /* #####################################################################
 /*                        Private Team Endpoints
 /* ##################################################################### */
+
+/*
+* Get All Teams
+*/
+router.get('/all', requireAuthentication, requireAdmin, async(req, res, next) => {
+    try{
+        const teams = await Team.findAll({
+            attributes: ['id', 'active', 'name', 'coach_id', 'captain_id', 'igl_id']
+        })
+        if(teams.length > 0) {
+            res.status(200).send(teams)
+        } else {
+            res.status(404).send({
+                error: "No Teams Found"
+            })
+        }
+    } catch (err) {
+        res.status(500).send({
+            error: "Server Error"
+        })
+    }
+})
 
 /*
 * Create Team
