@@ -363,34 +363,27 @@ router.post('/pfp', jsonParser, requireAuthentication, imageUpload.single('image
         .output(resizedPath)
         .on('end', async() => {
           var user = await User.findByPk(req.user)
-          if(user.pfp != null){
             fs.unlink(req.file.path, async(err) => { // Remove original image
               if (err) {
                 res.status(500).send({
                   error: "Error removing original profile image"
                 })
               } else {
-                const filePath = path.join(__dirname, '/uploads/profile-images/', user.pfp)
-                fs.unlink(filePath, async(err) => { // Remove existing pfp
-                  if (err) {
-                    res.status(500).send({
-                      error: "Error removing existing profile image"
-                    })
-                  } else {
-                    user = await User.update(
-                      {pfp: req.user + req.file.filename},
-                      {where: {id: req.user}}
-                    )
-                    res.status(201).send()
-                }})
+                if(user.pfp != null){
+                  const filePath = path.join(__dirname, '/uploads/profile-images/', user.pfp)
+                  fs.unlink(filePath, async(err) => { // Remove existing pfp
+                    if (err) {
+                      // TODO: Log File Removal Error
+                      // NOTE: This is not a critical error
+                    }
+                  })
+                }
+                user = await User.update(
+                  {pfp: req.user + req.file.filename},
+                  {where: {id: req.user}}
+                )
+                res.status(201).send()
             }})
-          } else {
-            user = await User.update(
-              {pfp: req.file.filename},
-              {where: {id: req.user}}
-            )
-            res.status(201).send()
-          }
         })
         .on('error', (err) => {
           res.status(500).send({

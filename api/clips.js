@@ -86,33 +86,31 @@ router.post('/', jsonParser, requireAuthentication, videoUpload.single('video'),
         //.outputOptions('-s 1280x720') // Set the frame size to 1280x720
         .outputOptions('-aspect 16:9') // Set the aspect ratio to 16:9
         .videoBitrate('2000k') // Set the desired video bitrate for compression
-        .on('end', () => {
+        .on('end', async () => {
           fs.unlink(req.file.path, async(err) => {
             if (err) {
-              res.status(500).send({
-                error: "Error Removing Uncompressed Video"
-              })
-            } else {
-              uploadObject = {
-                title: req.body.title,
-                user_id: req.user,
-                path: 'compressed_' + req.file.filename
-              }
-              const newUpload = await Clip.create(uploadObject)
-              if(newUpload != null){
-                res.status(201).send({
-                  title: newUpload.title,
-                  public: newUpload.public,
-                  date: newUpload.createdAt,
-                  link: `/clips/${newUpload.id}`
-                })
-              } else {
-                res.status(500).send({
-                  error: "Error Uploading Video"
-                })
-              }
+              // TODO: Log File Removal Error
+              // NOTE: This is not a critical error
             }
         })
+        uploadObject = {
+          title: req.body.title,
+          user_id: req.user,
+          path: 'compressed_' + req.file.filename
+        }
+        const newUpload = await Clip.create(uploadObject)
+        if(newUpload != null){
+          res.status(201).send({
+            title: newUpload.title,
+            public: newUpload.public,
+            date: newUpload.createdAt,
+            link: `/clips/${newUpload.id}`
+          })
+        } else {
+          res.status(500).send({
+            error: "Error Uploading Video"
+          })
+        }
         })
         .on('error', (err) => {
           res.status(500).send({
