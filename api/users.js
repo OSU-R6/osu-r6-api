@@ -373,7 +373,8 @@ router.post('/pfp', jsonParser, requireAuthentication, imageUpload.single('image
                   const filePath = path.join(__dirname, '/uploads/profile-images/', user.pfp)
                   fs.unlink(filePath, async(err) => { // Remove existing pfp
                     if (err) {
-                      console.log("Error removing existing pfp")
+                      // TODO: Log File Removal Error
+                      // NOTE: This is not a critical error
                     }
                   })
                 }
