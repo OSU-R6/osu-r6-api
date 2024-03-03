@@ -41,7 +41,7 @@ router.get('/:team/roster', async(req, res, next) => {
     try{
         const team = await User.findAll({ 
             where: {team_id: req.params.team},
-            attributes: ['id', 'firstName', 'lastName', 'ign']
+            attributes: ['id', 'firstName', 'lastName', 'ign', 'isSubstitute']
         })
         if(team.length > 0) {
             res.status(200).send(team)
