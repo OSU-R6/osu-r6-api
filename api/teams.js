@@ -41,7 +41,7 @@ router.get('/:team/roster', async(req, res, next) => {
     try{
         const team = await User.findAll({ 
             where: {team_id: req.params.team},
-            attributes: ['id', 'firstName', 'lastName', 'ign']
+            attributes: ['id', 'firstName', 'lastName', 'ign', 'isSubstitute']
         })
         if(team.length > 0) {
             res.status(200).send(team)
@@ -138,10 +138,7 @@ router.patch('/:team_id', jsonParser, requireAuthentication, requireAdmin, async
     try {
         const team = await Team.findByPk(req.params.team_id)
         if(team != null) {
-            const updatedFields = ['name', 'captain_id', 'coach_id', 'igl_id', 'active']
-            updatedFields.forEach(field => {
-                team[field] = req.body[field] || team[field]
-            })
+            team.set(req.body)
             try {
                 await team.validate()
                 await team.save()
@@ -160,6 +157,7 @@ router.patch('/:team_id', jsonParser, requireAuthentication, requireAdmin, async
             })
         }
     } catch (err) {
+        console.log(err)
         res.status(500).send({
             error: "Server Error"
         })
