@@ -65,6 +65,7 @@ const User = sequelize.define('User', {
   },
   team_id: {
     type: DataTypes.INTEGER,
+    allowNull: true,
     validate: {
       checkTeamId() {
         if (this.type === 'active' && this.team_id == null) {
@@ -75,6 +76,7 @@ const User = sequelize.define('User', {
   },
   role: {
     type: DataTypes.STRING,
+    allowNull: true,
     validate: {
       checkTeamId() {
         if (this.type === 'active' && this.role == null) {
@@ -111,6 +113,17 @@ const User = sequelize.define('User', {
   youtube: {
     type: DataTypes.STRING,
     allowNull: true,
+  },
+  isSubstitute: {
+    type: DataTypes.BOOLEAN,
+    allowNull: true,
+    validate: {
+      checkTeamId() {
+        if (this.type === 'active' && this.role == null) {
+          throw new Error('Role required for active player')
+        }
+      }
+    }
   }
 }, {
   hooks: {

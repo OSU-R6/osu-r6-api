@@ -28,11 +28,49 @@ router.get('/:user', async(req, res, next) => {
         exclude: ['admin', 'password', 'email', 'pfp', 'createdAt', 'updatedAt']
       }
     })
-    user.pfp = '/users/' + user.ign + '/pfp'
     if(user != null){
-      res.status(200).send(user)
+      user.pfp = '/users/' + user.ign + '/pfp'
+      if(user != null){
+        res.status(200).send(user)
+      } else {
+        res.status(500).send({
+          error: "User Not Found"
+        })
+      }
     } else {
-      res.status(500).send({
+      res.status(404).send({
+        error: "User Not Found"
+      })
+    }
+  } catch {
+    res.status(500).send({
+      error: "Server Error"
+    })
+  }
+})
+
+/*
+* Get User's Public Profile by ID
+*/
+router.get('/:user/id', async(req, res, next) => {
+  try {
+    const user = await User.findOne({
+      where: {id: req.params.user},
+      attributes: {
+        exclude: ['admin', 'password', 'email', 'pfp', 'createdAt', 'updatedAt']
+      }
+    })
+    if(user != null){
+      user.pfp = '/users/' + user.ign + '/pfp'
+      if(user != null){
+        res.status(200).send(user)
+      } else {
+        res.status(500).send({
+          error: "User Not Found"
+        })
+      }
+    } else {
+      res.status(404).send({
         error: "User Not Found"
       })
     }
@@ -322,9 +360,10 @@ router.patch('/', requireAuthentication, jsonParser, async(req, res, next) => {
   try{
     const user = await User.findByPk(req.user)
     const updatedFields = ['bio', 'uplay', 'twitch', 'twitter', 'youtube', 'instagram']
-
     updatedFields.forEach(field => {
-      user[field] = req.body[field] || user[field]
+      if (field in req.body) {
+        user[field] = req.body[field]
+      }
     })
 
     try {
@@ -359,7 +398,7 @@ router.post('/pfp', jsonParser, requireAuthentication, imageUpload.single('image
       // Resize Image
       const resizedPath = path.join(__dirname, '/uploads/profile-images/', req.user + req.file.filename)
       ffmpeg(req.file.path)
-        .size('500x1000')
+        .size('500x800')
         .output(resizedPath)
         .on('end', async() => {
           var user = await User.findByPk(req.user)
@@ -395,6 +434,44 @@ router.post('/pfp', jsonParser, requireAuthentication, imageUpload.single('image
   } catch {
     res.status(500).send({
       error: "Error Uploading Image"
+    })
+  }
+})
+
+
+/* #####################################################################
+/*                        Admin User Endpoints
+/* ##################################################################### */
+
+
+/*
+* Edit User as Administrator
+*/
+router.patch('/:id', requireAuthentication, requireAdmin, jsonParser, async(req, res, next) => {
+  try{
+    const user = await User.findByPk(req.params.id)
+    const updatedFields = ['bio', 'uplay', 'twitch', 'twitter', 'youtube', 'instagram', 'team_id', 'isSubstitute', 'role', 'type', 'pfp', 'admin', 'firstName', 'lastName', 'ign', 'email']
+    updatedFields.forEach(field => {
+      if (field in req.body) {
+        user[field] = req.body[field]
+      }
+    })
+
+    try {
+      await user.validate()
+      await user.save()
+      res.status(200).send()
+    } catch (err) {
+      if (err.name === 'SequelizeValidationError') {
+        err = err.errors.map((err) => err.message)
+      }
+      res.status(400).send({
+        error: err
+      })
+    }
+  } catch (err) {
+    res.status(500).send({
+      error: "Server Error"
     })
   }
 })
