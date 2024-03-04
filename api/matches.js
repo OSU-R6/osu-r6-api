@@ -112,6 +112,44 @@ router.get('/upcoming/:team', async(req, res, next) => {
     }
 })
 
+/*
+* Get Live Matches
+*/
+router.get('/live', async(req, res, next) => {
+    try { 
+        const currentDate = new Date();
+        const maxEndMatchDate = new Date(currentDate.getTime() - (90 * 60 * 1000));
+        const matches = await Match.findAll({ 
+            where: {
+                date: {
+                    [Op.gt]: maxEndMatchDate,
+                    [Op.lte]: currentDate
+                }
+            },
+            attributes: ['id', 'description', 'team_id', 'opponent', 'date', 'stream_link'],
+            order: [['date', 'ASC']],
+            include: [
+                {
+                  model: Team,
+                  attributes: ['name']
+                }
+            ]
+        })
+        if(matches.length > 0) {
+            res.status(200).send(matches)
+        } else {
+            res.status(404).send({
+                error: "No Live Matches Found"
+            })
+        }
+
+    } catch (err) {
+        res.status(500).send({
+            error: "Server Error"
+        })
+    }
+})
+
 
 /* #####################################################################
 /*                        Private Match Endpoints

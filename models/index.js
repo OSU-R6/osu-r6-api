@@ -4,6 +4,7 @@ const {Match} = require('./match')
 const {Event} = require('./event')
 const {Invite} = require('./invite')
 const {Clip} = require('./clip')
+const {Prospect} = require('./prospect')
 
 User.belongsTo(Team, { foreignKey: 'team_id', as: 'team' })
 Team.hasMany(User, { foreignKey: 'team_id', as: 'teamMembers' })
@@ -34,5 +35,6 @@ module.exports = {
     Match,
     Event,
     Invite,
-    Clip
+    Clip,
+    Prospect
 }
