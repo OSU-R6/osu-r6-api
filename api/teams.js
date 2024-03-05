@@ -57,7 +57,7 @@ router.get('/:team/roster', async(req, res, next) => {
     }
   })
 
-/*
+  /*
 * Get Team Info
 */
 router.get('/:team/info', async(req, res, next) => {

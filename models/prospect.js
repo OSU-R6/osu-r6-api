@@ -90,8 +90,6 @@ const Prospect = sequelize.define('Prospect', {
     allowNull: false,
     defaultValue: 'pending'
   }
-}, {
-  paranoid: true
 })
 
 exports.Prospect = Prospect
