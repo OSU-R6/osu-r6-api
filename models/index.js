@@ -5,8 +5,6 @@ const {Event} = require('./event')
 const {Invite} = require('./invite')
 const {Clip} = require('./clip')
 const {Prospect} = require('./prospect')
-const {Attendee} = require('./attendee')
-const {Announcement} = require('./announcement')
 
 User.belongsTo(Team, { foreignKey: 'team_id', as: 'team' })
 Team.hasMany(User, { foreignKey: 'team_id', as: 'teamMembers' })
@@ -31,17 +29,6 @@ Team.hasMany(Invite, { foreignKey: 'team_id', as: 'teamInvites' })
 Match.belongsTo(Team, { foreignKey: 'team_id' })
 Team.hasMany(Match, { foreignKey: 'team_id' })
 
-Event.hasMany(Attendee, { foreignKey: 'event_id' })
-Attendee.belongsTo(Event, { foreignKey: 'event_id' })
-User.hasMany(Attendee, { foreignKey: 'user_id' })
-Attendee.belongsTo(User, { foreignKey: 'user_id' })
-
-Announcement.belongsTo(User, { foreignKey: 'author_id' })
-User.hasMany(Announcement, { foreignKey: 'author_id' })
-Announcement.belongsTo(Team, { foreignKey: 'team_id' })
-Team.hasMany(Announcement, { foreignKey: 'team_id' })
-
-
 module.exports = {
     User,
     Team,
@@ -49,7 +36,5 @@ module.exports = {
     Event,
     Invite,
     Clip,
-    Prospect,
-    Attendee,
-    Announcement
+    Prospect
 }
