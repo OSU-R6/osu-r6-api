@@ -56,7 +56,7 @@ router.get('/past', async(req, res, next) => {
             attributes: {
                 exclude: ['createdAt', 'updatedAt']
             },
-            order: [['date', 'ASC']],
+            order: [['date', 'DESC']],
             include: [
                 {
                   model: Team,
