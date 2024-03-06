@@ -229,9 +229,11 @@ router.post('/', jsonParser, requireInvite, async (req, res, next) => {
       ign: req.body.ign,
       email: req.body.email,
       type: req.body.type,
-      team_id: req.body.team_id,
-      role: req.body.role,
-      isSubstitute: false
+    }
+    if(req.body.type == 'active') {
+      userToCreate.role = req.body.role,
+      userToCreate.team_id = req.body.team_id,
+      userToCreate.isSubstitute = false
     }
     if(req.body.password != null) {
       // TODO: Validate password vs regex
