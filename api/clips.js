@@ -85,7 +85,7 @@ router.post('/', jsonParser, requireAuthentication, videoUpload.single('video'),
         .outputOptions('-r 30') // Set the frame rate to 30 FPS
         //.outputOptions('-s 1280x720') // Set the frame size to 1280x720
         .outputOptions('-aspect 16:9') // Set the aspect ratio to 16:9
-        .videoBitrate('2000k') // Set the desired video bitrate for compression
+        .videoBitrate('5000k') // Set the desired video bitrate for compression
         .on('end', async () => {
           fs.unlink(req.file.path, async(err) => {
             if (err) {
