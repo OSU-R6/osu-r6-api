@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/Carl-Bohme/osu-r6-api#readme",
   "dependencies": {
+    "aws-sdk": "^2.1572.0",
     "bcrypt": "^5.1.0",
     "body-parser": "^1.20.2",
     "cookie": "^0.5.0",
