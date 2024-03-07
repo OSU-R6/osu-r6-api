@@ -329,10 +329,6 @@ router.post('/login', jsonParser, async(req, res, next) => {
         res.status(401).send({
           error: "Invalid email or password"
         })
-      } else if(user.emailVerified == false) {
-        res.status(403).send({
-          error: "Email Not Verified"
-        })
       } else {
         const passwordMatches = await bcrypt.compare(req.body.password, user.password)
         if (!passwordMatches) {
@@ -340,8 +336,14 @@ router.post('/login', jsonParser, async(req, res, next) => {
             error: "Invalid email or password"
           })
         } else {
-          setAuthCookie(res, generateAuthToken(user.id))
-          res.status(200).send()
+          if(user.emailVerified == false) {
+            res.status(403).send({
+              error: "Email Not Verified"
+            })
+          } else {
+            setAuthCookie(res, generateAuthToken(user.id))
+            res.status(200).send()
+          }
         }
       }
     } catch (err) {
@@ -359,9 +361,9 @@ router.post('/login', jsonParser, async(req, res, next) => {
 /*
 * Email Verification
 */
-router.post('/verify/:token', async(req, res, next) => {
+router.post('/verify/check/', jsonParser, async(req, res, next) => {
   try {
-    const payload = validateEmailAuthenticationToken(req.params.token)
+    const payload = validateEmailAuthenticationToken(req.body.token)
     if(payload != null) {
       const user = await User.findOne({ where: {email:payload.email, emailVerified: false}})
       if(user != null) {
@@ -370,7 +372,7 @@ router.post('/verify/:token', async(req, res, next) => {
         await user.save()
         res.status(200).send()
       } else {
-        res.status(401).send({
+        res.status(404).send({
           error: "Invalid Email"
         })
       }
@@ -389,7 +391,7 @@ router.post('/verify/:token', async(req, res, next) => {
 /*
 * Resend Email Verification
 */
-router.get('/verify/email/', jsonParser, async(req, res, next) => {
+router.post('/verify/send/', jsonParser, async(req, res, next) => {
   try {
     const user = await User.findOne({ where: {email: req.body.email, emailVerified: false}})
     if(user != null) {
