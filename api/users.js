@@ -4,13 +4,17 @@ const fs = require('fs')
 const path = require('path')
 const { Op } = require('sequelize')
 const ffmpeg = require('fluent-ffmpeg')
+const { sendEmailVerification } = require('../lib/mail')
 
 const bodyParser = require('body-parser')
 var jsonParser = bodyParser.json() 
 
 const { User, Clip, Invite, Team } = require('../models/index')
-const { requireAuthentication, requireAdmin, generateAuthToken, requireInvite, setAuthCookie, clearAuthCookie, allowAthentication } = require('../lib/auth')
+const { requireAuthentication, requireAdmin, generateAuthToken, requireInvite, setAuthCookie, clearAuthCookie, allowAthentication, validateEmailAuthenticationToken, generateEmailAuthenticationToken } = require('../lib/auth')
 const { imageUpload, multerErrorCatch} = require('../lib/multer')
+const { send } = require('process')
+
+const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+}{":;'?/>.<,`\]\\[-])(?=.*[a-zA-Z]).{8,}$/
 
 
 /* #####################################################################
@@ -235,30 +239,35 @@ router.post('/', jsonParser, requireInvite, async (req, res, next) => {
       userToCreate.team_id = req.body.team_id,
       userToCreate.isSubstitute = false
     }
-    if(req.body.password != null) {
-      // TODO: Validate password vs regex
-      userToCreate.password = await bcrypt.hash(req.body.password, 8)
-    }
-    const newUser = User.build(userToCreate)
-    try {
-      await newUser.validate()
-      await newUser.save()
-      if( await Invite.update(
-        { usedBy: newUser.id, status: "inactive"},
-        { where: {token: req.token} }
-      ) == null) {
-        res.status(500).send({
-          error: "Error Deactiviating Invite"
+    if(req.body.password != null && passwordRegex.test(req.body.password)) {
+      userToCreate.password = await bcrypt.hash(req.body.password, 10)
+      const newUser = User.build(userToCreate)
+      try {
+        await newUser.validate()
+        await newUser.save()
+        const token = generateEmailAuthenticationToken(userToCreate.email)
+        sendEmailVerification(token, userToCreate.email, userToCreate.firstName)
+        if( await Invite.update(
+          { invitee_id: newUser.id, status: "inactive"},
+          { where: {token: req.token} }
+        ) == null) {
+          res.status(500).send({
+            error: "Error Deactiviating Invite"
+          })
+        } else {
+          res.status(201).send()
+        }
+      } catch (err) {
+        if (err.name === 'SequelizeValidationError') {
+          err = err.errors.map((err) => err.message)
+        }
+          res.status(400).send({
+          error: err
         })
-      } else {
-        res.status(201).send()
       }
-    } catch (err) {
-      if (err.name === 'SequelizeValidationError') {
-        err = err.errors.map((err) => err.message)
-      }
-        res.status(400).send({
-        error: err
+    } else {
+      res.status(400).send({
+        error: "Invalid Password"
       })
     }
   } catch (err) {
@@ -327,18 +336,76 @@ router.post('/login', jsonParser, async(req, res, next) => {
             error: "Invalid email or password"
           })
         } else {
-          setAuthCookie(res, generateAuthToken(user.id))
-          res.status(200).send()
+          if(user.emailVerified == false) {
+            res.status(403).send({
+              error: "Email Not Verified"
+            })
+          } else {
+            setAuthCookie(res, generateAuthToken(user.id))
+            res.status(200).send()
+          }
         }
       }
     } catch (err) {
       res.status(500).send({
-        error: "An error occurred while logging in"
+        error: err
       })
     }
   } else {
     res.status(401).send({
       error: "Login requires email and password"
+    })
+  }
+})
+
+/*
+* Email Verification
+*/
+router.post('/verify/check/', jsonParser, async(req, res, next) => {
+  try {
+    const payload = validateEmailAuthenticationToken(req.body.token)
+    if(payload != null) {
+      const user = await User.findOne({ where: {email:payload.email, emailVerified: false}})
+      if(user != null) {
+        user.emailVerified = true
+        await user.validate()
+        await user.save()
+        res.status(200).send()
+      } else {
+        res.status(404).send({
+          error: "Invalid Email"
+        })
+      }
+    } else {
+      res.status(401).send({
+        error: "Invalid Email Verification Token"
+      })
+    }
+  } catch (err) {
+    res.status(500).send({
+      error: "Server Error"
+    })
+  }
+})
+
+/*
+* Resend Email Verification
+*/
+router.post('/verify/send/', jsonParser, async(req, res, next) => {
+  try {
+    const user = await User.findOne({ where: {email: req.body.email, emailVerified: false}})
+    if(user != null) {
+      const token  = generateEmailAuthenticationToken(user.email)
+      sendEmailVerification(token, user.email, user.firstName)
+      res.status(200).send()
+    } else {
+      res.status(401).send({
+        error: "Invalid Email"
+      })
+    }
+  } catch (err) {
+    res.status(500).send({
+      error: "Server Error"
     })
   }
 })
