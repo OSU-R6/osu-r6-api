@@ -124,6 +124,10 @@ const User = sequelize.define('User', {
         }
       }
     }
+  },
+  emailVerified: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   }
 }, {
   hooks: {
