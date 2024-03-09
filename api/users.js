@@ -429,7 +429,7 @@ router.post('/logout', async(req, res, next) => {
 router.patch('/', requireAuthentication, jsonParser, async(req, res, next) => {
   try{
     const user = await User.findByPk(req.user)
-    const updatedFields = ['bio', 'uplay', 'twitch', 'twitter', 'youtube', 'instagram']
+    const updatedFields = ['bio', 'ign', 'uplay', 'twitch', 'twitter', 'youtube', 'instagram']
     updatedFields.forEach(field => {
       if (field in req.body) {
         user[field] = req.body[field]
