@@ -82,10 +82,8 @@ router.post('/', jsonParser, requireAuthentication, videoUpload.single('video'),
       const compressedVideoPath = path.join(__dirname, '/uploads/player-clips/', 'compressed_' + req.file.filename)
       ffmpeg(req.file.path)
         .output(compressedVideoPath)
-        .outputOptions('-r 30') // Set the frame rate to 30 FPS
-        //.outputOptions('-s 1280x720') // Set the frame size to 1280x720
-        .outputOptions('-aspect 16:9') // Set the aspect ratio to 16:9
-        .videoBitrate('5000k') // Set the desired video bitrate for compression
+        .videoCodec('libx264')
+        .outputOptions('-crf 20')
         .on('end', async () => {
           fs.unlink(req.file.path, async(err) => {
             if (err) {
