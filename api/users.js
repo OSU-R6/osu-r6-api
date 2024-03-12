@@ -4,13 +4,28 @@ const fs = require('fs')
 const path = require('path')
 const { Op } = require('sequelize')
 const ffmpeg = require('fluent-ffmpeg')
-const { sendEmailVerification } = require('../lib/mail')
+const { 
+  sendEmailVerification,
+  sendPasswordResetEmail
+} = require('../lib/mail')
 
 const bodyParser = require('body-parser')
 var jsonParser = bodyParser.json() 
 
 const { User, Clip, Invite, Team } = require('../models/index')
-const { requireAuthentication, requireAdmin, generateAuthToken, requireInvite, setAuthCookie, clearAuthCookie, allowAthentication, validateEmailAuthenticationToken, generateEmailAuthenticationToken } = require('../lib/auth')
+const { 
+  requireAuthentication, 
+  requireAdmin, 
+  generateAuthToken, 
+  requireInvite, 
+  setAuthCookie, 
+  clearAuthCookie, 
+  allowAthentication, 
+  requirePasswordResetToken,
+  generatePasswordResetToken, 
+  requireEmailAuthenticationToken, 
+  generateEmailAuthenticationToken 
+} = require('../lib/auth')
 const { imageUpload, multerErrorCatch} = require('../lib/multer')
 const { send } = require('process')
 
@@ -361,11 +376,10 @@ router.post('/login', jsonParser, async(req, res, next) => {
 /*
 * Email Verification
 */
-router.post('/verify/check/', jsonParser, async(req, res, next) => {
+router.post('/verify/check/:token', requireEmailAuthenticationToken, jsonParser, async(req, res, next) => {
   try {
-    const payload = validateEmailAuthenticationToken(req.body.token)
-    if(payload != null) {
-      const user = await User.findOne({ where: {email:payload.email, emailVerified: false}})
+    if(req.email != null) {
+      const user = await User.findOne({ where: {email:req.email, emailVerified: false}})
       if(user != null) {
         user.emailVerified = true
         await user.validate()
@@ -406,6 +420,57 @@ router.post('/verify/send/', jsonParser, async(req, res, next) => {
   } catch (err) {
     res.status(500).send({
       error: "Server Error"
+    })
+  }
+})
+
+/* 
+* Reset Password
+*/
+router.post('/reset-password/:token', requirePasswordResetToken, jsonParser, async(req, res, next) => {
+  try {
+    const user = await User.findOne({ where: {email: req.email}})
+    if(user != null) {
+      if(req.body.password != null && passwordRegex.test(req.body.password)) {
+        user.password = await bcrypt.hash(req.body.password, 10)
+        await user.validate()
+        await user.save()
+        res.status(200).send()
+      } else {
+        res.status(400).send({
+          error: "Invalid Password"
+        })
+      }
+    } else {
+      res.status(401).send({
+        error: "Invalid Email"
+      })
+    }
+  } catch (err) {
+    res.status(500).send({
+      error: "Server Error"
+    })
+  }
+})
+
+/*
+* Request Password Reset
+*/
+router.post('/reset-password', jsonParser, async(req, res, next) => {
+  try {
+    const user = await User.findOne({ where: {email: req.body.email}})
+    if(user != null) {
+      const token = generatePasswordResetToken(user.email)
+      sendPasswordResetEmail(token, user.email, user.firstName)
+      res.status(200).send()
+    } else {
+      res.status(401).send({
+        error: "Invalid Email"
+      })
+    }
+  } catch (err) {
+    res.status(500).send({
+      error: err
     })
   }
 })
@@ -504,6 +569,39 @@ router.post('/pfp', jsonParser, requireAuthentication, imageUpload.single('image
   } catch {
     res.status(500).send({
       error: "Error Uploading Image"
+    })
+  }
+})
+
+/*
+* Reset User Profile Image
+*/
+router.delete('/pfp', requireAuthentication, async(req, res, next) => {
+  try {
+    var user = await User.findByPk(req.user)
+    if(user.pfp != null){
+      const filePath = path.join(__dirname, '/uploads/profile-images/', user.pfp)
+      fs.unlink(filePath, async(err) => {
+        if (err) {
+          res.status(500).send({
+            error: "Error removing profile image"
+          })
+        } else {
+          user = await User.update(
+            {pfp: null},
+            {where: {id: req.user}}
+          )
+          res.status(204).send()
+        }
+      })
+    } else {
+      res.status(404).send({
+        error: "No Profile Image Found"
+      })
+    }
+  } catch {
+    res.status(500).send({
+      error: "Error removing profile image"
     })
   }
 })
