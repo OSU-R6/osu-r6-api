@@ -10,6 +10,7 @@ const { Clip } = require('../models/clip')
 const { User } = require('../models/user')
 const { requireAuthentication, allowAthentication } = require('../lib/auth')
 const { videoUpload, multerErrorCatch} = require('../lib/multer')
+const { generateUploadURL } = require('../lib/s3')
 
 
 /* #####################################################################
@@ -29,7 +30,7 @@ router.get('/', async (req, res, next) => {
             user_id: element.user_id,
             title: element.title,
             date: element.createdAt,
-            link: `/clips/${element.id}`
+            link: element.path
           })
         });
         res.status(200).send({
@@ -69,57 +70,55 @@ router.get('/:clip', jsonParser, allowAthentication, async(req, res, next) => {
 /* ##################################################################### */
 
 /*
-* Upload user clip
+* Upload user clip to AWS S3
 */
-router.post('/', jsonParser, requireAuthentication, videoUpload.single('video'), multerErrorCatch, async(req, res, next) => {
+router.get('/uploadurl/:filename', jsonParser, requireAuthentication, async(req, res, next) => {
   try{ 
-    if(!req.file) {
-      res.status(400).send({
-        error: "MP4 File Required"
+    await generateUploadURL(req.params.filename).then((url) => {
+      console.log(url)
+      res.status(200).send({
+        url: url
       })
-    } else {
-      // Compress Video
-      const compressedVideoPath = path.join(__dirname, '/uploads/player-clips/', 'compressed_' + req.file.filename)
-      ffmpeg(req.file.path)
-        .output(compressedVideoPath)
-        .videoCodec('libx264')
-        .outputOptions('-crf 20')
-        .on('end', async () => {
-          fs.unlink(req.file.path, async(err) => {
-            if (err) {
-              // TODO: Log File Removal Error
-              // NOTE: This is not a critical error
-            }
-        })
-        uploadObject = {
-          title: req.body.title,
-          user_id: req.user,
-          path: 'compressed_' + req.file.filename
-        }
-        const newUpload = await Clip.create(uploadObject)
-        if(newUpload != null){
-          res.status(201).send({
-            title: newUpload.title,
-            public: newUpload.public,
-            date: newUpload.createdAt,
-            link: `/clips/${newUpload.id}`
-          })
-        } else {
-          res.status(500).send({
-            error: "Error Uploading Video"
-          })
-        }
-        })
-        .on('error', (err) => {
-          res.status(500).send({
-            error: "Error Compressing Video"
-          })
-        })
-        .run();
-    }
+    }).catch((err) => {
+      res.status(500).send({
+        error: "Error Generating Upload URL 1"
+      })
+    })
   } catch {
     res.status(500).send({
-      error: "Error Uploading Video"
+      error: "Error Generating Upload URL 2"
+    })
+  }
+})
+
+/*
+* Create Clip
+*/
+router.post('/', jsonParser, requireAuthentication, async(req, res, next) => {
+  try{
+    uploadObject = {
+      title: req.body.title,
+      user_id: req.user,
+      path: req.body.path
+    }
+    console.log(uploadObject)
+    console.log(req.body)
+    const newUpload = await Clip.create(uploadObject)
+    if(newUpload != null){
+      res.status(201).send({
+        title: newUpload.title,
+        public: newUpload.public,
+        date: newUpload.createdAt,
+        link: newUpload.path
+      })
+    } else {
+      res.status(500).send({
+        error: "Error Uploading Video"
+      })
+    }
+  } catch(err) {
+    res.status(500).send({
+      error: err
     })
   }
 })
@@ -173,17 +172,8 @@ router.delete('/:clip', requireAuthentication, async(req, res, next) => {
     const clip = await Clip.findByPk(req.params.clip)
     if(clip != null){
       if(clip.user_id == req.user){
-        const filePath = path.join(__dirname, '/uploads/player-clips/', clip.path)
-        fs.unlink(filePath, async(err) => {
-          if (err) {
-            res.status(404).send({
-              error: "Error removing clip"
-            })
-          } else {
-            await Clip.destroy({ where: { id : req.params.clip } })
-            res.status(204).send()
-          }
-        })
+          await Clip.destroy({ where: { id : req.params.clip } })
+          res.status(204).send()
       } else {
         res.status(401).send({
           error: "Unauthorized"
