@@ -124,64 +124,6 @@ router.post('/', jsonParser, requireAuthentication, async(req, res, next) => {
 })
 
 /*
-* Upload user clip to local storage (deprecated)
-*/
-/*
-router.post('/', jsonParser, requireAuthentication, videoUpload.single('video'), multerErrorCatch, async(req, res, next) => {
-  try{ 
-    if(!req.file) {
-      res.status(400).send({
-        error: "MP4 File Required"
-      })
-    } else {
-      // Compress Video
-      const compressedVideoPath = path.join(__dirname, '/uploads/player-clips/', 'compressed_' + req.file.filename)
-      ffmpeg(req.file.path)
-        .output(compressedVideoPath)
-        .videoCodec('libx264')
-        .outputOptions('-crf 20')
-        .on('end', async () => {
-          fs.unlink(req.file.path, async(err) => {
-            if (err) {
-              // TODO: Log File Removal Error
-              // NOTE: This is not a critical error
-            }
-        })
-        uploadObject = {
-          title: req.body.title,
-          user_id: req.user,
-          path: 'compressed_' + req.file.filename
-        }
-        const newUpload = await Clip.create(uploadObject)
-        if(newUpload != null){
-          res.status(201).send({
-            title: newUpload.title,
-            public: newUpload.public,
-            date: newUpload.createdAt,
-            link: `/clips/${newUpload.id}`
-          })
-        } else {
-          res.status(500).send({
-            error: "Error Uploading Video"
-          })
-        }
-        })
-        .on('error', (err) => {
-          res.status(500).send({
-            error: "Error Compressing Video"
-          })
-        })
-        .run();
-    }
-  } catch {
-    res.status(500).send({
-      error: "Error Uploading Video"
-    })
-  }
-})
-*/
-
-/*
 * Edit Clip
 */
 router.patch('/:clip', requireAuthentication, jsonParser, async(req, res, next) => {
@@ -230,17 +172,6 @@ router.delete('/:clip', requireAuthentication, async(req, res, next) => {
     const clip = await Clip.findByPk(req.params.clip)
     if(clip != null){
       if(clip.user_id == req.user){
-        /*const filePath = path.join(__dirname, '/uploads/player-clips/', clip.path)
-        fs.unlink(filePath, async(err) => {
-          if (err) {
-            res.status(404).send({
-              error: "Error removing clip"
-            })
-          } else {
-            await Clip.destroy({ where: { id : req.params.clip } })
-            res.status(204).send()
-          }
-        })*/
           await Clip.destroy({ where: { id : req.params.clip } })
           res.status(204).send()
       } else {
