@@ -151,7 +151,7 @@ router.get('/:user/clips', jsonParser, allowAthentication, async(req, res, nect)
         public: element.public,
         spotlight: element.spotlight,
         date: element.createdAt,
-        link: `/clips/${element.id}`
+        link: element.path
       })
     })
     res.status(200).send({
@@ -189,7 +189,7 @@ router.get('/:user/spotlight', jsonParser, async(req, res, nect) => {
         id: element.id,
         title: element.title,
         date: element.createdAt,
-        link: `/clips/${element.id}`
+        link: element.path
       })
     })
     res.status(200).send({
